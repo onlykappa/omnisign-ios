@@ -3,7 +3,7 @@ import Foundation
 public enum DiagnosticCategory: String, Codable, CaseIterable, Sendable {
     case inspection, authentication, certificate, provisioning, pairing, installation, refresh, transport, unknown
     public static func classify(code: Int?, httpStatus: Int? = nil, stage: DiagnosticCategory) -> DiagnosticCategory {
-        if httpStatus == 503 || httpStatus == 429 { return .authentication }
+        if stage == .authentication, httpStatus == 503 || httpStatus == 429 { return .authentication }
         // These codes vary by backend; retain the originating stage instead of inventing meanings.
         if [-80045, -80046, 7460].contains(code ?? 0) { return stage }
         return stage
@@ -42,15 +42,16 @@ public struct ProfileSummary: Equatable {
     /// Decoded plist inspection only. This does NOT validate a CMS signature or Apple trust chain.
     public init(decodedPlist: Data, now: Date = Date()) throws {
         guard let p = try PropertyListSerialization.propertyList(from: decodedPlist, format: nil) as? [String: Any],
-              let teams = p["TeamIdentifier"] as? [String], teams.count == 1, let team = teams.first,
+              let teams = p["TeamIdentifier"] as? [String], teams.count == 1, let team = teams.first, !team.isEmpty, team.allSatisfy({ $0.isASCII && $0.isLetter || $0.isNumber && $0.isASCII }),
               let ent = p["Entitlements"] as? [String: Any], let app = ent["application-identifier"] as? String,
               let expiration = p["ExpirationDate"] as? Date, expiration > now,
-              app.hasPrefix(team + ".") else { throw OmniError.invalidProfile }
+              app.hasPrefix(team + "."),
+              IdentifierRules.bundle(app.hasSuffix(".*") ? String(app.dropLast(2)) : app) else { throw OmniError.invalidProfile }
         self.team = team; appIdentifier = app; self.expiration = expiration
         deviceCount = (p["ProvisionedDevices"] as? [String])?.count ?? 0
     }
-    public func permits(bundleID: String, team: String) -> Bool {
-        guard team == self.team, !bundleID.isEmpty else { return false }
+    public func permits(bundleID: String, team: String, now: Date = Date()) -> Bool {
+        guard expiration > now, team == self.team, IdentifierRules.bundle(bundleID) else { return false }
         let expected = team + "." + bundleID
         if appIdentifier.hasSuffix(".*") { return expected.hasPrefix(String(appIdentifier.dropLast())) }
         return appIdentifier == expected

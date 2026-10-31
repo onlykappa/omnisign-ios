@@ -72,7 +72,8 @@ final class CoreTests: XCTestCase {
             let object = try JSONSerialization.jsonObject(with: JSONEncoder().encode(d)) as! [String:Any]
             XCTAssertEqual(Set(object.keys), Set(["id","date","category","code","operation","message"]))
         }
-        XCTAssertEqual(Diagnostic(category:.transport,httpStatus:503).category,.authentication)
+        XCTAssertEqual(Diagnostic(category:.authentication,httpStatus:503).category,.authentication)
+        XCTAssertEqual(Diagnostic(category:.transport,httpStatus:503).category,.transport)
     }
     func testPairingRejectsIncompleteAndArbitraryData() throws {
         XCTAssertThrowsError(try PairingInspector.validate(Data("secret".utf8)))
