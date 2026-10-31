@@ -17,7 +17,9 @@ Owner policy: keep PR #1 and PR #2 draft and unmerged. PR #2 is stacked on `feat
 - [x] Run isolated pinned AGPL synthetic signing experiment: run41201328417 passed primitives/tamper checks and Mac native structural/cryptographic verification. No Apple development authorization or iPhone installability. Gate remains closed.
 - [x] Implement read-only accessible-key proof, offline Apple-root candidate analysis, source-traced pairing schemas/replacement approval and passive runtime/network diagnostics; hosted tests passed.
 - [x] Add local Swift-only disposable identity factory and reject silently ignored PFX encryption; 8 local lab tests plus independent OpenSSL identity checks passed.
-- [ ] Check source1a39bfd hosted run41203139779: explicit Apple-anchor rejection, both synthetic identity origins and isolated signer/support iOS cross-compile.
+- [x] Pass source1a39bfd hosted run41203139779: Apple-anchor rejection, both synthetic origins and isolated signer/support iOS cross-compile.
+- [x] Harden isolated PFX integrity/key selection with14 local/hosted tests and dual-origin signing checks (source4a32f5f/run41203535444); full production audit remains open.
+- [x] Build disposable saved-value SwiftUI fixture1.0/1.1 with exact metadata checks (sourced5632a9/run41203656751); physical data-preservation test NOT RUN.
 - [ ] Complete production signer/transitive audit and full independent signature trust validation; do not weaken verifier to make a test pass.
 - [ ] Resolve all V1 signer/transport license and implementation prerequisites in PR #1 or reviewed follow-up commits.
 - [ ] Demonstrate V1 sign/install/launch/refresh/update/data survival on the actual target, with computer disconnected.

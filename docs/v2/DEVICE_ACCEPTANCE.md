@@ -16,3 +16,5 @@ Do not bypass disabled engines. Complete V1 signer, transport and license gates 
 12. Export redacted operation history, manually inspect for secrets, and record exact observed outcomes. Only after this succeeds evaluate separately owner-authorized Kodi/KappaForge identity/capability compatibility without automatic deletion.
 
 Pass requires actual target-device sign/install/launch/refresh/update and saved-data survival with no active computer, including restart and temporary transport failure recovery. Missing backend or desktop dependency is a failed/incomplete gate, not a skipped success. Automated tests cannot replace this procedure.
+
+Prepared fixture: [Tests/DeviceFixture](../../Tests/DeviceFixture/README.md) provides unsigned1.0/1.1 saved-value builds (run41203656751). It has no nested framework/extension and does not replace that coverage requirement. Check free-account app/identifier slots without deleting owner apps; lack of a slot is an unresolved acceptance constraint. No physical results exist.

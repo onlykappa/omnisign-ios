@@ -13,4 +13,6 @@
 - No production, zero-PC or self-refresh claim. No merge/release has been authorized or performed.
 
 - Native private-key identity proof, pairing-replacement approval and passive runtime diagnostics passed hosted run41201716117. Identity discovery sees only this app’s accessible Keychain, not other apps’ Keychains; proof never permits signing. Profile CMS remains untrusted. Latest hosted suite:57 unique tests (47 portable9 app1 UI); physical behavior unverified.
-- General native Mac codesign acceptance of synthetic output does not imply an Apple development identity or profile. New Swift-generated disposable identities are locally tested; new hosted dual-origin/Apple-anchor/iOS-support checks remain pending. No hardcoded test private key or lab dependency is shipped in the manager.
+- General native Mac codesign acceptance of synthetic output does not imply an Apple development identity or profile. Swift-generated disposable identities, dual-origin/Apple-anchor rejection and iOS-support checks passed hosted run41203535444. No hardcoded test private key or lab dependency is shipped in the manager.
+
+- The disposable SwiftUI version pair compiles but has never launched on the target. Its saved-value screen cannot prove signing/install provenance and does not cover nested framework/extension behavior; lab fixtures are separate cryptographic tests. Free-provisioning app/identifier limits can prevent simultaneous manager/fixture testing alongside owner apps. Do not delete owner apps to make room automatically.
