@@ -54,13 +54,17 @@ public struct ProfileSummary: Equatable, Sendable {
     public let deviceCount: Int
     /// Decoded plist inspection only. This does NOT validate a CMS signature or Apple trust chain.
     public init(decodedPlist: Data, now: Date = Date(), allowExpiredForInspection: Bool = false) throws {
+        guard decodedPlist.count <= 1_048_576 else { throw OmniError.limitsExceeded }
         guard let p = try PropertyListSerialization.propertyList(from: decodedPlist, format: nil) as? [String: Any],
               let teams = p["TeamIdentifier"] as? [String], teams.count == 1, let team = teams.first, !team.isEmpty, team.allSatisfy({ $0.isASCII && $0.isLetter || $0.isNumber && $0.isASCII }),
               let ent = p["Entitlements"] as? [String: Any], let app = ent["application-identifier"] as? String,
-              let expiration = p["ExpirationDate"] as? Date, allowExpiredForInspection || expiration > now,
+              let expiration = p["ExpirationDate"] as? Date, expiration >= Date(timeIntervalSince1970:0), expiration <= Date.distantFuture, allowExpiredForInspection || expiration > now,
               app.hasPrefix(team + "."),
               IdentifierRules.bundle(app.hasSuffix(".*") ? String(app.dropLast(2)) : app) else { throw OmniError.invalidProfile }
         let creation = p["CreationDate"] as? Date
+        guard p["CreationDate"] == nil || creation != nil,
+              creation == nil || (creation! >= Date(timeIntervalSince1970:0) && creation! <= Date.distantFuture),
+              p["ProvisionedDevices"] == nil || p["ProvisionedDevices"] is [String] else { throw OmniError.invalidProfile }
         guard creation == nil || expiration > creation!, allowExpiredForInspection || creation == nil || creation! <= now else { throw OmniError.invalidProfile }
         self.team = team; appIdentifier = app; self.expiration = expiration; creationDate = creation
         deviceCount = (p["ProvisionedDevices"] as? [String])?.count ?? 0

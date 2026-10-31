@@ -235,6 +235,9 @@ struct RootView: View {
                             VStack(alignment: .leading) {
                                 Text("Subject OU (unverified): " + identity.metadata.subjectOrganizationalUnits.joined(separator: ", "))
                                 Text("Certificate: " + identity.metadata.validity().rawValue).font(.caption)
+                                if let trust = identity.offlineTrust {
+                                    Text("Offline Apple PKI: " + (trust.blocker?.rawValue ?? "candidate only; revocation/profile/device status unverified")).font(.caption)
+                                }
                                 Button("Prove matching private-key access") { model.proveIdentity(identity) }
                                 Text(model.identityProofs[identity.id] ?? "Not checked; iOS may request authorization for explicit private-key use").font(.caption)
                             }

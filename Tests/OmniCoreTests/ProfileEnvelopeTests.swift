@@ -26,6 +26,12 @@ final class ProfileEnvelopeTests: XCTestCase {
             XCTAssertThrowsError(try ProfileEnvelope(cms:bad))
         }
     }
+    func testDecodedProfileRejectsMalformedTimeTypesAndOversizedInput() throws {
+        let object: [String: Any] = ["TeamIdentifier":["TEAM"], "Entitlements":["application-identifier":"TEAM.org.test"], "ExpirationDate":Date.distantFuture, "CreationDate":"not a Date"]
+        let plist = try PropertyListSerialization.data(fromPropertyList:object,format:.xml,options:0)
+        XCTAssertThrowsError(try ProfileSummary(decodedPlist:plist,allowExpiredForInspection:true))
+        XCTAssertThrowsError(try ProfileSummary(decodedPlist:Data(repeating:0,count:1_048_577)))
+    }
     func testNotYetValidProfileFailsUseTimePolicy() throws {
         let now = Date(timeIntervalSince1970:1_000_000)
         let envelope = try ProfileEnvelope(cms:fixture(),now:now)

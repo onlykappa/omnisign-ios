@@ -2,7 +2,7 @@ import Foundation
 import ZIPFoundation
 
 public enum OmniError: String, Error, LocalizedError, Codable {
-    case unsafeArchive, limitsExceeded, malformedBundle, unsupportedExecutable, unavailable, incompatible, invalidProfile, invalidCertificate, certificateExpired, privateKeyUnavailable, unsupportedKeyAlgorithm, keyOperationDenied, invalidPairing, corruptedState, invalidTransition, interrupted
+    case unsafeArchive, limitsExceeded, malformedBundle, unsupportedExecutable, unavailable, incompatible, invalidProfile, invalidCertificate, certificateExpired, certificateNotYetValid, privateKeyUnavailable, unsupportedKeyAlgorithm, keyOperationDenied, invalidPairing, corruptedState, invalidTransition, interrupted
     public var errorDescription: String? { rawValue }
 }
 public struct BundleRecord: Codable, Equatable, Sendable {

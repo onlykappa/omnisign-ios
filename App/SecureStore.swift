@@ -43,7 +43,8 @@ struct SecureStore {
         guard SecTrustCreateWithCertificates(certificate, SecPolicyCreateBasicX509(), &trust) == errSecSuccess,
               let trust else { throw OmniError.unavailable }
         // Basic X.509 trust is not Apple development authorization or proof of private-key access.
-        SecTrustSetNetworkFetchAllowed(trust, false)
+        let networkStatus = SecTrustSetNetworkFetchAllowed(trust, false)
+        guard networkStatus == errSecSuccess else { throw SecureStoreError(code: networkStatus) }
         let trustStatus = SecTrustEvaluateWithError(trust, nil) ? "Basic X.509 trust accepted" : "Basic X.509 trust not established"
         let expiration = ISO8601DateFormatter().string(from: metadata.notAfter)
         let units = metadata.subjectOrganizationalUnits.joined(separator: ", ")

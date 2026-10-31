@@ -7,6 +7,10 @@ struct LocalIdentity: Identifiable {
     let reference: SecIdentity
     let certificate: SecCertificate
     let metadata: CertificateMetadata
+    let offlineTrust: AppleTrustAssessment?
+    init(reference: SecIdentity, certificate: SecCertificate, metadata: CertificateMetadata, offlineTrust: AppleTrustAssessment? = nil) {
+        self.reference = reference; self.certificate = certificate; self.metadata = metadata; self.offlineTrust = offlineTrust
+    }
 }
 @MainActor enum IdentityInspector {
     /// Read-only discovery limited by iOS to OmniSign's accessible Keychain identities.
@@ -24,12 +28,13 @@ struct LocalIdentity: Identifiable {
             guard status == errSecSuccess else { throw SecureStoreError(code: status) }
             guard let certificate else { throw OmniError.invalidCertificate }
             let metadata = try CertificateMetadata(der: SecCertificateCopyData(certificate) as Data)
-            return LocalIdentity(reference: identity, certificate: certificate, metadata: metadata)
+            return LocalIdentity(reference: identity, certificate: certificate, metadata: metadata, offlineTrust: try AppleDevelopmentTrust.inspect(certificate))
         }
     }
     /// Explicit owner-triggered challenge. This does not establish Apple chain/profile eligibility or export a key.
     static func proveOwnership(_ identity: LocalIdentity) throws -> Bool {
-        guard identity.metadata.validity() == .valid else { throw OmniError.certificateExpired }
+        if identity.metadata.validity() == .expired { throw OmniError.certificateExpired }
+        if identity.metadata.validity() == .notYetValid { throw OmniError.certificateNotYetValid }
         var privateKey: SecKey?
         let status = SecIdentityCopyPrivateKey(identity.reference, &privateKey)
         guard status == errSecSuccess else { throw SecureStoreError(code: status) }

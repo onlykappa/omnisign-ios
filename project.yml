@@ -42,6 +42,10 @@ targets:
         buildPhase: resources
       - path: Tests/OmniCoreTests/Fixtures/synthetic-certificate.der
         buildPhase: resources
+      - path: Tests/OmniCoreTests/Fixtures/synthetic-developer-marker.der
+        buildPhase: resources
+      - path: AppTests/Fixtures/AppleRootCA-G3.cer
+        buildPhase: resources
     dependencies:
       - target: OmniSign
       - package: OmniCore
