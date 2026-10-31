@@ -1,0 +1,48 @@
+warning: 'zipfoundation': found 1 file(s) which are unhandled; explicitly declare them as resources or exclude from the target
+    /workspace/OmniSign/.build/checkouts/ZIPFoundation/Sources/ZIPFoundation/Resources/PrivacyInfo.xcprivacy
+[0/1] Planning build
+Building for debugging...
+[0/4] Write swift-version-47D096A624661465.txt
+[1/3] Copying Fixtures
+Build complete! (0.44s)
+Test Suite 'All tests' started at 2026-10-31 04:59:50.269
+Test Suite 'debug.xctest' started at 2026-10-31 04:59:50.270
+Test Suite 'CoreTests' started at 2026-10-31 04:59:50.270
+Test Case 'CoreTests.testAtomicImportAndPersistence' started at 2026-10-31 04:59:50.270
+Test Case 'CoreTests.testAtomicImportAndPersistence' passed (0.006 seconds)
+Test Case 'CoreTests.testEntitlementsFailClosed' started at 2026-10-31 04:59:50.276
+Test Case 'CoreTests.testEntitlementsFailClosed' passed (0.101 seconds)
+Test Case 'CoreTests.testErrorContextContainsOnlyAllowlistedValues' started at 2026-10-31 04:59:50.377
+Test Case 'CoreTests.testErrorContextContainsOnlyAllowlistedValues' passed (0.001 seconds)
+Test Case 'CoreTests.testHostileArchives' started at 2026-10-31 04:59:50.378
+Test Case 'CoreTests.testHostileArchives' passed (0.007 seconds)
+Test Case 'CoreTests.testInstallationPreflight' started at 2026-10-31 04:59:50.385
+Test Case 'CoreTests.testInstallationPreflight' passed (0.0 seconds)
+Test Case 'CoreTests.testMetadataAndNestedPlan' started at 2026-10-31 04:59:50.385
+Test Case 'CoreTests.testMetadataAndNestedPlan' passed (0.001 seconds)
+Test Case 'CoreTests.testNoOperationCanSucceed' started at 2026-10-31 04:59:50.386
+Test Case 'CoreTests.testNoOperationCanSucceed' passed (0.0 seconds)
+Test Case 'CoreTests.testPairingRejectsIncompleteAndArbitraryData' started at 2026-10-31 04:59:50.386
+Test Case 'CoreTests.testPairingRejectsIncompleteAndArbitraryData' passed (0.001 seconds)
+Test Case 'CoreTests.testProvisioningParsingAndExpiry' started at 2026-10-31 04:59:50.388
+Test Case 'CoreTests.testProvisioningParsingAndExpiry' passed (0.001 seconds)
+Test Case 'CoreTests.testRecoveryBoundAndRateLimits' started at 2026-10-31 04:59:50.389
+Test Case 'CoreTests.testRecoveryBoundAndRateLimits' passed (0.0 seconds)
+Test Case 'CoreTests.testUnsafePaths' started at 2026-10-31 04:59:50.389
+Test Case 'CoreTests.testUnsafePaths' passed (0.0 seconds)
+Test Suite 'CoreTests' passed at 2026-10-31 04:59:50.389
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.118 (0.118) seconds
+Test Suite 'debug.xctest' passed at 2026-10-31 04:59:50.389
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.118 (0.118) seconds
+Test Suite 'All tests' passed at 2026-10-31 04:59:50.389
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.118 (0.118) seconds
+◇ Test run started.
+↳ Testing Library Version: 6.0.2 (cd448bbe5cc989d)
+✔ Test run with 0 tests passed after 0.001 seconds.
+Building for debugging...
+[0/3] Write swift-version-47D096A624661465.txt
+Build of product 'omnisign-inspect' complete! (0.15s)
+Building for debugging...
+[0/3] Write swift-version-47D096A624661465.txt
+Build of product 'omnisign-inspect' complete! (0.14s)
+Inspection rejected: unsafeArchive

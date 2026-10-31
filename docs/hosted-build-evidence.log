@@ -1,0 +1,19 @@
+Run: https://github.com/onlykappa/omnisign-ios/actions/runs/41171713736
+Source: 43ec5d90128f45faca347bd5be45d3023a3bec72
+build	Record build environment	2026-10-31T05:13:26.2857540Z Xcode 16.4
+build	Record build environment	2026-10-31T05:13:26.2867020Z Build version 16F6
+build	Record build environment	2026-10-31T05:13:28.6338800Z Apple Swift version 6.1.2 (swiftlang-6.1.2.1.2 clang-1700.0.13.5)
+build	Test portable core and inspection CLI	2026-10-31T05:13:57.0271930Z 	 Executed 11 tests, with 0 failures (0 unexpected) in 0.015 (0.015) seconds
+build	Test portable core and inspection CLI	2026-10-31T05:13:57.0273000Z 	 Executed 11 tests, with 0 failures (0 unexpected) in 0.015 (0.015) seconds
+build	Test portable core and inspection CLI	2026-10-31T05:13:57.0274030Z 	 Executed 11 tests, with 0 failures (0 unexpected) in 0.015 (0.016) seconds
+build	Compile for Simulator	2026-10-31T05:14:45.6549720Z ** BUILD SUCCEEDED **
+build	Run Simulator app smoke test	2026-10-31T05:14:47.5074210Z Simulator smoke test uses iPhone 17 Pro Max / com.apple.CoreSimulator.SimRuntime.iOS-26-2; this is not physical-device acceptance.
+build	Run Simulator app smoke test	2026-10-31T05:17:04.7294890Z 	 Executed 2 tests, with 0 failures (0 unexpected) in 0.244 (0.244) seconds
+build	Run Simulator app smoke test	2026-10-31T05:17:04.9758310Z 	 Executed 2 tests, with 0 failures (0 unexpected) in 0.244 (0.245) seconds
+build	Run Simulator app smoke test	2026-10-31T05:17:05.1413740Z 	 Executed 2 tests, with 0 failures (0 unexpected) in 0.244 (0.483) seconds
+build	Run Simulator app smoke test	2026-10-31T05:18:42.8536790Z 	 Executed 1 test, with 0 failures (0 unexpected) in 22.588 (22.588) seconds
+build	Run Simulator app smoke test	2026-10-31T05:18:42.8758590Z 	 Executed 1 test, with 0 failures (0 unexpected) in 22.588 (22.591) seconds
+build	Run Simulator app smoke test	2026-10-31T05:18:42.8985720Z 	 Executed 1 test, with 0 failures (0 unexpected) in 22.588 (22.593) seconds
+build	Run Simulator app smoke test	2026-10-31T05:18:44.5778780Z ** TEST SUCCEEDED **
+build	Compile unsigned iPhone application	2026-10-31T05:19:24.8768480Z ** BUILD SUCCEEDED **
+build	Package unsigned bootstrap IPA	2026-10-31T05:19:25.2099000Z 749ffc77248fed6022343f166751e9ddccc65ce603ff9c7f7fdaed8d1942befa  OmniSign-UNSIGNED-experimental.ipa
