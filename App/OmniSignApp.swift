@@ -206,8 +206,12 @@ struct RootView: View {
                         ForEach(model.operations) { operation in
                             VStack(alignment: .leading) {
                                 Text("\(operation.kind.rawValue) · \(operation.stage.rawValue)").font(.headline)
-                                TimelineView(.periodic(from: .now, by: 1)) { context in
-                                    Text("Attempt \(operation.attempt) · \(Int(operation.elapsed(at: context.date))) seconds").font(.caption)
+                                if operation.result == .running {
+                                    TimelineView(.periodic(from: .now, by: 1)) { context in
+                                        Text("Attempt \(operation.attempt) · \(Int(operation.elapsed(at: context.date))) seconds").font(.caption)
+                                    }
+                                } else {
+                                    Text("Attempt \(operation.attempt) · \(Int(operation.elapsed())) seconds").font(.caption)
                                 }
                                 if let previous = operation.interruptedStage { Text("Interrupted during \(previous.rawValue); automatic resume disabled").font(.caption) }
                                 if let diagnostic = operation.diagnostic {
