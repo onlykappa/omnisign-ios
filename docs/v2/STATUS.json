@@ -1,5 +1,5 @@
 {
-  "updatedUTC": "2026-10-31T06:00:00Z",
+  "updatedUTC": "2026-10-31T13:00:00Z",
   "classification": "V2 Blocked",
   "v1Branch": "feat/v1-experimental",
   "v1PR": 1,
@@ -7,22 +7,29 @@
   "v2PR": 2,
   "mergeAuthorized": false,
   "releaseAuthorized": false,
-  "sourceCheckpoint": "0ab2990",
-  "portableTestsPassed": 42,
+  "appSourceCheckpoint": "2bf03b6",
+  "labSourceCheckpoint": "1a39bfd",
+  "portableTestsPassed": 47,
+  "latestHostedUniqueTestsPassed": 57,
+  "localLabTestsPassed": 8,
   "physicalDeviceValidated": false,
   "appleSigningOperational": false,
   "installationOperational": false,
   "refreshOperational": false,
   "v1PassedRun": 41174314865,
-  "v2LastPassedInspectionRun": 41173560308,
+  "v2LastPassedInspectionRun": 41201716117,
   "offlinePrimitivePassedRuns": [
     41173298634,
-    41174346608
+    41174346608,
+    41175510473,
+    41176350147,
+    41201328417
   ],
-  "nativeAppleVerifierAcceptedSyntheticOutput": false,
+  "nativeCodesignAcceptedSyntheticOutput": true,
+  "nativeCodesignEvidenceRun": 41201328417,
+  "appleDevelopmentAuthorization": false,
   "pendingRuns": [
-    41174709903,
-    41175000886
+    41203139779
   ],
   "criticalBlockers": [
     "Apple account/session/provisioning backend missing",
@@ -30,5 +37,5 @@
     "Validated free-only paired device transport missing",
     "Physical iPhone 17/iOS 27.0.1 zero-PC acceptance absent"
   ],
-  "nextAction": "Inspect pending hosted runs and fix actual failures before advancing automation; keep both drafts unmerged."
+  "nextAction": "Inspect new lab hosted run; continue isolated signer/independent verification prerequisites. Phone inspection preview ready after authorized Windows bootstrap; real mutation controls disabled."
 }

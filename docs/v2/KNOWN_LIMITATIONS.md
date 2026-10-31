@@ -12,4 +12,5 @@
 - No rollback package strategy, update history from installed services, owner-app migration, expiration notifications or polished V2 UI. Functional gates take precedence over cosmetics.
 - No production, zero-PC or self-refresh claim. No merge/release has been authorized or performed.
 
-- Native private-key identity proof is implemented but pending hosted verification at this checkpoint. It discovers only this app’s accessible identities, not other apps’ Keychains; proof never permits signing. Profile CMS inspection always remains untrusted. New portable suite: 42 tests; hosted status must be read from TEST_RESULTS.md.
+- Native private-key identity proof, pairing-replacement approval and passive runtime diagnostics passed hosted run41201716117. Identity discovery sees only this app’s accessible Keychain, not other apps’ Keychains; proof never permits signing. Profile CMS remains untrusted. Latest hosted suite:57 unique tests (47 portable9 app1 UI); physical behavior unverified.
+- General native Mac codesign acceptance of synthetic output does not imply an Apple development identity or profile. New Swift-generated disposable identities are locally tested; new hosted dual-origin/Apple-anchor/iOS-support checks remain pending. No hardcoded test private key or lab dependency is shipped in the manager.

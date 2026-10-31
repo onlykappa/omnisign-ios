@@ -1,5 +1,19 @@
 # V2 test results
 
+## Current verified snapshot — 2026-10-31
+
+Latest app source **2bf03b6**, [hosted run41201716117](https://github.com/onlykappa/omnisign-ios/actions/runs/41201716117) **succeeded: 57 unique tests** (47 portable, 9 native app, 1 UI). Native tests cover real isolated-Keychain pairing-replacement approval/cancellation, generated accessible private-key proof and mismatched-certificate rejection, negative forged-development-marker trust, official public Apple root parsing and runtime/export privacy. Simulator + unsigned arm64 iPhone builds and inspection of the compiled IPA passed. Passive NWPath/utun counts never grant transport access. No hardware/Apple account/real development signing/install/refresh test ran.
+
+Runner-reported inner unsigned IPA SHA256: `0932d21e867245dcf44317b0bcd3b2ebf18b217ecd000612bac42c1a35050696`. Artifact13042708704 (`OmniSign-UNSIGNED-experimental`) expires after seven days, is not signed/installable directly, and was not rehashed locally. See ../FIRST_DEVICE_TEST.md.
+
+Additional successful hosted checkpoints: 41174709903 source7650caf (43 unique), 41175000886 source0ab2990 (profile source), 41175986452 sourceffa1e00 (50 unique), 41176821111 source74d1ae8 (pairing approval; all steps succeeded). The formerly pending runs below are historical. Their Swift6.1 fixture-builder failure was corrected, not skipped.
+
+[Lab run41201328417](https://github.com/onlykappa/omnisign-ios/actions/runs/41201328417), source1cfbed8, **succeeded**: 6 tests; 4 clang-generated targets; independent Python page/special-slot/listed-resource and OpenSSL+Swift CMS checks; all three code/CMS/resource tamper checks rejected; csreq accepted designated requirement3; iOS verifier module compiled. After fixing requirement encoding, fail-open resource reads and generated leaf code-signing usage, **Mac codesign structural/cryptographic verification accepted the synthetic output**. This is not Apple-issued development identity authorization or iPhone installation evidence. Historical rejection below remains accurate for older source.
+
+New lab source1a39bfd: **8 local tests passed**, plus independent OpenSSL parsing/self-signature/RSA consistency of Swift-generated synthetic identity, temporary PFX0600. Hosted run **41203139779 pending** at this checkpoint: both identity origins, explicit Apple-anchor rejection and full isolated support/signer iOS cross-compile must be checked. No pass inferred. Factory uses a new ephemeral non-Apple key; unencrypted PFX is synthetic memory/temporary-test-only. Production credential export remains unsupported and requested PFX encryption now throws rather than silently ignoring the password.
+
+## Historical checkpoints (superseded where noted)
+
 Baseline portable suite: 11 passed, 0 failed. Prior V1 hosted run 41171713736: 14 unique automated tests passed on source 43ec5d9, not physical hardware.
 
 Current passive foundation checkpoint: **27 portable XCTest tests passed, 0 failed** on Linux Swift 6.0.2, plus CLI valid/archive rejection checks. App source syntax parsing passed, but hosted Xcode validation of these new changes is still pending. Track run https://github.com/onlykappa/omnisign-ios/actions/runs/41172825357 on source b9b1a55.

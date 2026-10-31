@@ -10,3 +10,5 @@ A Mac is not required to download and initially sign a GitHub-built IPA. The hos
 6. Launch OmniSign. Confirm it clearly says Experimental and signing/device services are disabled. Test IPA import with a disposable authorized file. This is app-preview/import validation, not completion of the independent signing/install acceptance gate.
 
 A free account/profile can expire; read the actual profile expiration from the bootstrap tool. OmniSign currently cannot refresh itself. Keep the Windows bootstrap route available for recovery. Do not rely on this build to preserve access to another installed application. No uninterrupted background refresh or iOS 27 support is established by this procedure.
+
+For the exact currently tested source, artifact links/hash and a non-destructive phone checklist, see [FIRST_DEVICE_TEST.md](FIRST_DEVICE_TEST.md). No preview test has yet run on the owner’s phone.

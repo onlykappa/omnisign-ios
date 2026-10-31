@@ -13,8 +13,11 @@ Owner policy: keep PR #1 and PR #2 draft and unmerged. PR #2 is stacked on `feat
 - [x] Implement bounded DER certificate metadata and CMS profile inspection with no trust grant; 42 portable tests pass with current structural regressions.
 - [x] Implement bounded thin/fat/load-command/encryption/XML-entitlement inspection and additional native inventory; cryptographic/DER/device validity remains unverified.
 - [x] Implement explicit read-only local identity discovery/key challenge source; no app signing activation.
-- [ ] Verify the newer identity/native-binary/profile source on hosted iOS; inspect runs 41174709903 and 41175000886, record failures accurately.
-- [x] Run separate pinned AGPL synthetic signing experiment: primitive checks pass; Apple's verifier rejects output. Gate remains closed.
+- [x] Verify identity/native/profile and later pairing/runtime source on hosted iOS; run41201716117 passed57 unique tests (47 core9 app1 UI). Earlier Swift6.1 fixture type-check failures are retained in TEST_RESULTS.md.
+- [x] Run isolated pinned AGPL synthetic signing experiment: run41201328417 passed primitives/tamper checks and Mac native structural/cryptographic verification. No Apple development authorization or iPhone installability. Gate remains closed.
+- [x] Implement read-only accessible-key proof, offline Apple-root candidate analysis, source-traced pairing schemas/replacement approval and passive runtime/network diagnostics; hosted tests passed.
+- [x] Add local Swift-only disposable identity factory and reject silently ignored PFX encryption; 8 local lab tests plus independent OpenSSL identity checks passed.
+- [ ] Check source1a39bfd hosted run41203139779: explicit Apple-anchor rejection, both synthetic identity origins and isolated signer/support iOS cross-compile.
 - [ ] Complete production signer/transitive audit and full independent signature trust validation; do not weaken verifier to make a test pass.
 - [ ] Resolve all V1 signer/transport license and implementation prerequisites in PR #1 or reviewed follow-up commits.
 - [ ] Demonstrate V1 sign/install/launch/refresh/update/data survival on the actual target, with computer disconnected.
