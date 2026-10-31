@@ -48,3 +48,7 @@ Resolve licenses and all dependency revisions; audit local authentication/aniset
 ## Subsequent build evidence
 
 The local Linux constraints above describe the initial gate inspection. An owner-provisioned GitHub repository and hosted macOS build subsequently became available. Xcode compilation, Simulator integration/UI tests and unsigned iPhone IPA packaging passed in run 41171713736; see TEST_RESULTS.md. This opens the build/toolchain milestone only. Account/signing/device transport and physical iPhone 17/iOS 27.0.1 acceptance gates remain closed.
+
+## Subsequent isolated signer evidence
+
+The separate AGPL laboratory (not an app dependency) reached native Mac structural/cryptographic codesign acceptance with a generated non-Apple identity in run41201328417, after correcting requirements/resource-read behavior and fixture certificate usage. This advances primitive verification only: actual Apple account authorization, trusted profiles, free-only paired device-service transport and physical target workflows remain absent. Current scope/evidence: v2/TEST_RESULTS.md and WORK_STATE.md. The Phase0 production/signing/install gate remains closed.

@@ -1,0 +1,48 @@
+{
+  "updatedUTC": "2026-10-31T13:03:54.191345+00:00",
+  "classification": "V2 Blocked",
+  "v1Branch": "feat/v1-experimental",
+  "v1PR": 1,
+  "v2Branch": "feat/v2-foundations",
+  "v2PR": 2,
+  "mergeAuthorized": false,
+  "releaseAuthorized": false,
+  "appSourceCheckpoint": "2bf03b6",
+  "labSourceCheckpoint": "4a32f5f",
+  "portableTestsPassed": 47,
+  "latestHostedUniqueTestsPassed": 57,
+  "localLabTestsPassed": 14,
+  "physicalDeviceValidated": false,
+  "appleSigningOperational": false,
+  "installationOperational": false,
+  "refreshOperational": false,
+  "v1PassedRun": 41174314865,
+  "v2LastPassedInspectionRun": 41201716117,
+  "offlinePrimitivePassedRuns": [
+    41173298634,
+    41174346608,
+    41175510473,
+    41176350147,
+    41201328417,
+    41203139779,
+    41203535444
+  ],
+  "nativeCodesignAcceptedSyntheticOutput": true,
+  "nativeCodesignEvidenceRun": 41201328417,
+  "appleDevelopmentAuthorization": false,
+  "pendingRuns": [
+    41203656725
+  ],
+  "criticalBlockers": [
+    "Apple account/session/provisioning backend missing",
+    "Apple-authorized signer and full independent trust validation missing",
+    "Validated free-only paired device transport missing",
+    "Physical iPhone 17/iOS 27.0.1 zero-PC acceptance absent"
+  ],
+  "nextAction": "Phone inspection preview is ready after authorized Windows bootstrap. Continue V1 production signer/validator/account/profile/transport prerequisites; do not enable mutation. Check app rerun41203656725 before treating it as newer evidence.",
+  "fixtureSourceCheckpoint": "d5632a9",
+  "hostedLabTestsPassed": 14,
+  "latestPassedLabRun": 41203535444,
+  "disposableFixtureBuildPassedRun": 41203656751,
+  "disposableFixtureHardwareValidated": false
+}

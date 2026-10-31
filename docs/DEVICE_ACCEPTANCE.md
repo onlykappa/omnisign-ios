@@ -18,3 +18,5 @@ Target: owner-confirmed iPhone 17 running iOS 27.0.1. Record actual model identi
 12. Only after repeated success consider owner-authorized Kodi/KappaForge imports. Inspect each actual IPA; verify entitlements/native code independently. Never automatically delete them or claim their data survives based on disposable-app results alone.
 
 Pass requires all sign/install/launch/refresh/update/data checks to complete on the actual target without an active PC. Automated tests cannot close this gate. No uninterrupted background refresh guarantee is permitted; schedule user reminders and use supported opportunities only after those paths exist and are tested.
+
+Prepared fixture: [Tests/DeviceFixture](../Tests/DeviceFixture/README.md) provides unsigned1.0/1.1 saved-value builds (run41203656751). It has no nested framework/extension and does not replace that coverage requirement. Check free-account app/identifier slots without deleting owner apps; lack of a slot is an unresolved acceptance constraint. No physical results exist.

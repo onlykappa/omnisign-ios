@@ -1,0 +1,4 @@
+experiment	Disposable cryptographic signing experiment	2026-10-31T05:38:15.2835450Z PASS: four generated targets have independently verified code-page/special-slot hashes and CMS signatures against the synthetic fixture identity.
+experiment	Disposable cryptographic signing experiment	2026-10-31T05:38:15.2836590Z Apple codesign verifier accepted synthetic output: false
+experiment	Disposable cryptographic signing experiment	2026-10-31T05:38:15.2837270Z Synthetic identity is not Apple-authorized. No account, provisioning, iPhone installation or on-device execution has been demonstrated.
+experiment	Disposable cryptographic signing experiment	2026-10-31T05:38:15.2837900Z PASS: independent verification rejects tampered resource.

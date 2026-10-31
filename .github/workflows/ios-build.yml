@@ -2,12 +2,26 @@ name: iOS experimental build
 on:
   workflow_dispatch:
   push:
-    branches: [feat/v1-experimental]
+    branches: [feat/v1-experimental, feat/v2-foundations]
+    paths:
+      - 'App/**'
+      - 'AppTests/**'
+      - 'Sources/**'
+      - 'Tests/**'
+      - 'UITests/**'
+      - 'Package.swift'
+      - 'Package.resolved'
+      - 'project.yml'
+      - 'scripts/test.sh'
+      - 'scripts/fixtures.py'
+      - 'scripts/select-simulator.py'
+      - 'scripts/generate-test-identity.py'
+      - '.github/workflows/ios-build.yml'
 permissions:
   contents: read
 concurrency:
   group: ios-build-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false # Preserve evidence from active tests; queue only the latest source checkpoint.
 jobs:
   build:
     runs-on: macos-15
@@ -16,43 +30,55 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Record build environment
         run: |
+          set -euo pipefail
           mkdir -p build-evidence
           xcodebuild -version | tee build-evidence/xcode.txt
           swift --version | tee build-evidence/swift.txt
           xcrun --sdk iphoneos --show-sdk-version | tee build-evidence/iphoneos-sdk.txt
       - name: Test portable core and inspection CLI
         run: |
-          set -o pipefail
+          set -euo pipefail
           scripts/test.sh 2>&1 | tee build-evidence/core-tests.log
       - name: Install project generator
         run: |
+          set -euo pipefail
           command -v xcodegen || brew install xcodegen
           xcodegen --version | tee build-evidence/xcodegen.txt
       - name: Generate project and resolve dependencies
         run: |
-          set -o pipefail
+          set -euo pipefail
+          python3 scripts/generate-test-identity.py
           xcodegen generate
           xcodebuild -resolvePackageDependencies -project OmniSign.xcodeproj -scheme OmniSign 2>&1 | tee build-evidence/resolve.log
       - name: Compile for Simulator
         run: |
-          set -o pipefail
+          set -euo pipefail
           xcodebuild -project OmniSign.xcodeproj -scheme OmniSign -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath DerivedData/Simulator CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build-evidence/simulator-build.log
       - name: Run Simulator app smoke test
         run: |
-          set -o pipefail
+          set -euo pipefail
           python3 scripts/select-simulator.py > build-evidence/simulator-id.txt
           simulator_id="$(cat build-evidence/simulator-id.txt)"
           xcodebuild -project OmniSign.xcodeproj -scheme OmniSign -destination "platform=iOS Simulator,id=$simulator_id" -derivedDataPath DerivedData/Simulator -resultBundlePath build-evidence/SimulatorTests.xcresult CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- test 2>&1 | tee build-evidence/simulator-tests.log
+      - name: Export Simulator screenshots
+        if: always()
+        run: |
+          set -euo pipefail
+          if [ -d build-evidence/SimulatorTests.xcresult ]; then
+            xcrun xcresulttool export attachments --path build-evidence/SimulatorTests.xcresult --output-path build-evidence/screenshots
+          fi
       - name: Compile unsigned iPhone application
         run: |
-          set -o pipefail
+          set -euo pipefail
           xcodebuild -project OmniSign.xcodeproj -scheme OmniSign -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath DerivedData/Device CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build-evidence/device-build.log
       - name: Package unsigned bootstrap IPA
         run: |
+          set -euo pipefail
           mkdir -p DerivedData/Bootstrap/Payload
           cp -R DerivedData/Device/Build/Products/Release-iphoneos/OmniSign.app DerivedData/Bootstrap/Payload/
           (cd DerivedData/Bootstrap && zip -qry ../../OmniSign-UNSIGNED-experimental.ipa Payload)
           shasum -a 256 OmniSign-UNSIGNED-experimental.ipa | tee build-evidence/ipa-sha256.txt
+          swift run omnisign-inspect OmniSign-UNSIGNED-experimental.ipa > build-evidence/self-inspection.json
           printf '%s\n' 'UNSIGNED EXPERIMENTAL BUILD. Requires authorized initial signing. Signing/install/refresh backends remain disabled. No physical-device acceptance has run.' > build-evidence/BUILD_STATUS.txt
       - name: Upload unsigned IPA
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

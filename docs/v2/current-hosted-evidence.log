@@ -1,0 +1,29 @@
+Current app source2bf03b6 / hosted41201716117 / conclusion success
+57 unique tests =47 portable +9 native app +1 UI; Simulator and unsigned iPhone builds. No physical evidence.
+build	Test portable core and inspection CLI	2026-10-31T12:35:36.1963140Z 	 Executed 47 tests, with 0 failures (0 unexpected) in 0.087 (0.089) seconds
+build	Test portable core and inspection CLI	2026-10-31T12:35:36.1963800Z 	 Executed 47 tests, with 0 failures (0 unexpected) in 0.087 (0.091) seconds
+build	Run Simulator app smoke test	2026-10-31T12:39:55.6118260Z 	 Executed 9 tests, with 0 failures (0 unexpected) in 0.535 (2.340) seconds
+build	Run Simulator app smoke test	2026-10-31T12:39:55.6450370Z 	 Executed 9 tests, with 0 failures (0 unexpected) in 0.535 (2.342) seconds
+build	Run Simulator app smoke test	2026-10-31T12:41:08.8034600Z Test Suite 'OmniSignUITests.xctest' passed at 2026-10-31 12:41:08.764.
+build	Package unsigned bootstrap IPA	2026-10-31T12:42:21.1244830Z 0932d21e867245dcf44317b0bcd3b2ebf18b217ecd000612bac42c1a35050696  OmniSign-UNSIGNED-experimental.ipa
+
+Isolated lab source4a32f5f / hosted41203535444 / conclusion success
+14 tests; each of two generated identity origins signs4 targets; native validity true, Apple-anchor false. No device execution/install.
+experiment	Disposable cryptographic signing experiment	2026-10-31T13:01:35.1373260Z 	 Executed 14 tests, with 0 failures (0 unexpected) in 3.535 (3.536) seconds
+experiment	Disposable cryptographic signing experiment	2026-10-31T13:01:35.1374080Z 	 Executed 14 tests, with 0 failures (0 unexpected) in 3.535 (3.538) seconds
+experiment	Disposable cryptographic signing experiment	2026-10-31T13:01:38.0671880Z PASS: four generated targets have independently verified code-page/special-slot hashes and CMS signatures against the synthetic fixture identity.
+experiment	Disposable cryptographic signing experiment	2026-10-31T13:01:38.0672700Z Mac codesign structural/cryptographic verification accepted synthetic output: true
+experiment	Disposable cryptographic signing experiment	2026-10-31T13:01:38.0673270Z Apple-anchor requirement accepted synthetic identity: false
+experiment	Disposable cryptographic signing experiment	2026-10-31T13:01:38.0674960Z PASS: independent verification rejects code-page tampering.
+experiment	Disposable cryptographic signing experiment	2026-10-31T13:01:38.0675370Z PASS: independent verification rejects CMS tampering.
+experiment	Disposable cryptographic signing experiment	2026-10-31T13:01:38.0676570Z PASS: independent verification rejects tampered resource.
+experiment	Disposable cryptographic signing experiment	2026-10-31T13:01:38.9603380Z PASS: four generated targets have independently verified code-page/special-slot hashes and CMS signatures against the synthetic fixture identity.
+experiment	Disposable cryptographic signing experiment	2026-10-31T13:01:38.9604330Z Mac codesign structural/cryptographic verification accepted synthetic output: true
+experiment	Disposable cryptographic signing experiment	2026-10-31T13:01:38.9604860Z Apple-anchor requirement accepted synthetic identity: false
+experiment	Disposable cryptographic signing experiment	2026-10-31T13:01:38.9606650Z PASS: independent verification rejects code-page tampering.
+experiment	Disposable cryptographic signing experiment	2026-10-31T13:01:38.9607070Z PASS: independent verification rejects CMS tampering.
+experiment	Disposable cryptographic signing experiment	2026-10-31T13:01:38.9608300Z PASS: independent verification rejects tampered resource.
+
+Disposable fixture sourced5632a9 / hosted41203656751 / conclusion success
+Two unsigned arm64 builds1.0/1.1; exact same bundleID and expected version/build metadata assertions executed.
+No physical fixture launch, signing, refresh, update or data survival result.

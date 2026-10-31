@@ -1,0 +1,53 @@
+name: Disposable device acceptance fixture
+on:
+  push:
+    branches: [feat/v2-foundations]
+    paths:
+      - 'Tests/DeviceFixture/**'
+      - '.github/workflows/device-fixture.yml'
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build two unsigned fixture versions without owner credentials
+        run: |
+          set -euo pipefail
+          brew install xcodegen
+          xcodegen generate --spec Tests/DeviceFixture/project.yml --project Tests/DeviceFixture
+          mkdir -p fixture-artifacts
+          for revision in 1 2; do
+            if [ "$revision" = 1 ]; then version=1.0; else version=1.1; fi
+            fixture_build="$RUNNER_TEMP/omnisign-fixture-$revision"
+            xcodebuild -project Tests/DeviceFixture/OmniSignAcceptance.xcodeproj -scheme OmniSignAcceptance -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath "$fixture_build" CODE_SIGNING_ALLOWED=NO MARKETING_VERSION="$version" CURRENT_PROJECT_VERSION="$revision" build > "fixture-artifacts/build-$revision.log" 2>&1
+            mkdir -p "$fixture_build/package/Payload"
+            cp -R "$fixture_build/Build/Products/Release-iphoneos/OmniSignAcceptance.app" "$fixture_build/package/Payload/"
+            fixture_output="$GITHUB_WORKSPACE/fixture-artifacts/OmniSign-Test-$version-UNSIGNED.ipa"
+            (cd "$fixture_build/package" && zip -qry "$fixture_output" Payload)
+          done
+          python3 - <<'PY'
+          import hashlib, json, pathlib, plistlib, zipfile
+          evidence = []
+          for path in sorted(pathlib.Path('fixture-artifacts').glob('*.ipa')):
+              with zipfile.ZipFile(path) as archive:
+                  info = plistlib.loads(archive.read('Payload/OmniSignAcceptance.app/Info.plist'))
+                  assert info['CFBundleIdentifier'] == 'org.omnisign.acceptance.disposable'
+                  expected = '1.0' if '1.0' in path.name else '1.1'
+                  assert info['CFBundleShortVersionString'] == expected
+                  assert info['CFBundleVersion'] == ('1' if expected == '1.0' else '2')
+                  assert archive.read('Payload/OmniSignAcceptance.app/OmniSignAcceptance')[:4] == bytes.fromhex('cffaedfe')
+              evidence.append(dict(file=path.name, sha256=hashlib.sha256(path.read_bytes()).hexdigest(), version=expected, unsigned=True, physicalDeviceTested=False))
+          assert len(evidence) == 2
+          pathlib.Path('fixture-artifacts/BUILD_STATUS.json').write_text(json.dumps(evidence, indent=2) + '\n')
+          PY
+      - name: Upload unsigned disposable fixtures and build evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: disposable-device-fixtures-UNSIGNED
+          path: fixture-artifacts
+          if-no-files-found: error
+          retention-days: 7

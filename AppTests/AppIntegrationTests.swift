@@ -14,6 +14,19 @@ final class AppIntegrationTests: XCTestCase {
         XCTAssertEqual(model.items.last?.main.identifier, "org.omnisign.disposable")
         XCTAssertEqual(try library.load().last?.id, model.items.last?.id)
         XCTAssertEqual(model.status, "Imported and inspected; signing unverified")
+        XCTAssertEqual(model.operations.first?.result, .completed)
+        XCTAssertEqual(model.operations.first?.kind, .inspection)
+        XCTAssertEqual(model.operations.first?.app, model.items.last?.id)
+        let journal = try XCTUnwrap(model.journal)
+        let export = try await journal.exportRedacted()
+        XCTAssertFalse(String(decoding: export, as: UTF8.self).contains("org.omnisign.disposable"))
+    }
+    func testValidSyntheticCertificateIsInspectedWithoutClaimingAppleEligibility() throws {
+        let file = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "synthetic-certificate", withExtension: "der"))
+        let summary = try SecureStore().inspectCertificate(Data(contentsOf: file))
+        XCTAssertTrue(summary.contains("OMNILAB123"))
+        XCTAssertTrue(summary.contains("Apple development eligibility and private-key ownership unverified"))
+        XCTAssertTrue(summary.contains("expires"))
     }
     func testKeychainStoreAndUpdateOnSimulator() throws {
         let store = SecureStore()
@@ -24,6 +37,7 @@ final class AppIntegrationTests: XCTestCase {
         XCTAssertTrue(store.contains(key))
         try store.save(Data("synthetic replacement".utf8), key: key)
         XCTAssertTrue(store.contains(key))
+        XCTAssertEqual(try store.read(key: key), Data("synthetic replacement".utf8))
         XCTAssertThrowsError(try store.inspectCertificate(Data("invalid certificate".utf8)))
     }
 }

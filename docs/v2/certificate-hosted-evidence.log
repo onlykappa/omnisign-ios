@@ -1,0 +1,12 @@
+build	Test portable core and inspection CLI	2026-10-31T05:45:16.7639800Z 	 Executed 3 tests, with 0 failures (0 unexpected) in 0.006 (0.006) seconds
+build	Test portable core and inspection CLI	2026-10-31T05:45:16.7813700Z 	 Executed 30 tests, with 0 failures (0 unexpected) in 0.049 (0.050) seconds
+build	Test portable core and inspection CLI	2026-10-31T05:45:16.7814530Z 	 Executed 30 tests, with 0 failures (0 unexpected) in 0.049 (0.051) seconds
+build	Compile for Simulator	2026-10-31T05:46:12.0227680Z ** BUILD SUCCEEDED **
+build	Run Simulator app smoke test	2026-10-31T05:50:22.6808490Z 	 Executed 3 tests, with 0 failures (0 unexpected) in 0.108 (1.553) seconds
+build	Run Simulator app smoke test	2026-10-31T05:50:22.7202190Z 	 Executed 3 tests, with 0 failures (0 unexpected) in 0.108 (1.553) seconds
+build	Run Simulator app smoke test	2026-10-31T05:50:22.7895260Z 	 Executed 3 tests, with 0 failures (0 unexpected) in 0.108 (1.554) seconds
+build	Run Simulator app smoke test	2026-10-31T05:51:22.3003100Z 	 Executed 1 test, with 0 failures (0 unexpected) in 22.248 (22.249) seconds
+build	Run Simulator app smoke test	2026-10-31T05:51:22.3163680Z 	 Executed 1 test, with 0 failures (0 unexpected) in 22.248 (22.251) seconds
+build	Run Simulator app smoke test	2026-10-31T05:51:22.3367830Z 	 Executed 1 test, with 0 failures (0 unexpected) in 22.248 (22.253) seconds
+build	Run Simulator app smoke test	2026-10-31T05:51:23.9542300Z ** TEST SUCCEEDED **
+build	Compile unsigned iPhone application	2026-10-31T05:52:08.3544590Z ** BUILD SUCCEEDED **
