@@ -7,7 +7,7 @@ import DisposableSigningSupport
 final class SyntheticIdentityTests: XCTestCase {
     func testGeneratedSyntheticIdentityIsSelfIssuedAndMatchesAccessibleKey() throws {
         let identity = try SyntheticIdentityFactory.generate()
-        let parsed = try PKCS12Parser(p12Data:identity.ephemeralPKCS12)
+        let parsed = try PKCS12Parser(p12Data:identity.ephemeralPKCS12,allowUnauthenticatedSynthetic:true)
         let certificate = try XCTUnwrap(parsed.leafCertificate)
         XCTAssertEqual(certificate.commonName,"OmniSign Disposable Lab")
         XCTAssertEqual(certificate.organizationalUnit,"OMNILAB123")
