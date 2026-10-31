@@ -72,6 +72,7 @@ jobs:
           cp -R DerivedData/Device/Build/Products/Release-iphoneos/OmniSign.app DerivedData/Bootstrap/Payload/
           (cd DerivedData/Bootstrap && zip -qry ../../OmniSign-UNSIGNED-experimental.ipa Payload)
           shasum -a 256 OmniSign-UNSIGNED-experimental.ipa | tee build-evidence/ipa-sha256.txt
+          swift run omnisign-inspect OmniSign-UNSIGNED-experimental.ipa > build-evidence/self-inspection.json
           printf '%s\n' 'UNSIGNED EXPERIMENTAL BUILD. Requires authorized initial signing. Signing/install/refresh backends remain disabled. No physical-device acceptance has run.' > build-evidence/BUILD_STATUS.txt
       - name: Upload unsigned IPA
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

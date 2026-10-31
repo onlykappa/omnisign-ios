@@ -13,7 +13,7 @@ root = pathlib.Path(__file__).resolve().parents[1] / 'Tests/OmniCoreTests/Fixtur
 root.mkdir(parents=True, exist_ok=True)
 def info(identifier, exe):
     return plistlib.dumps(dict(CFBundleIdentifier=identifier, CFBundleExecutable=exe, CFBundleName=exe, CFBundleVersion='2', CFBundleShortVersionString='1.2'), fmt=plistlib.FMT_BINARY)
-header = bytes.fromhex('cffaedfe') + bytes(60)
+header = struct.pack('<8I', 0xFEEDFACF, 0x0100000C, 0, 2, 0, 0, 0, 0) + bytes(32)
 base = {'Payload/Test.app/Info.plist':info('org.omnisign.disposable','Test'), 'Payload/Test.app/Test':header,
 'Payload/Test.app/Frameworks/Lib.framework/Info.plist':info('org.omnisign.lib','Lib'), 'Payload/Test.app/Frameworks/Lib.framework/Lib':header,
 'Payload/Test.app/PlugIns/Widget.appex/Info.plist':info('org.omnisign.disposable.widget','Widget'), 'Payload/Test.app/PlugIns/Widget.appex/Widget':header,
@@ -22,6 +22,7 @@ def write(name, entries):
     with DeterministicZip(root / (name+'.ipa'),'w', compression=zipfile.ZIP_DEFLATED) as z:
         for k,v in entries.items(): z.writestr(k,v)
 write('valid',base)
+write('nativeplugins',base | {'Payload/Test.app/PlugIns/libplugin.so':header, 'Payload/Test.app/Helpers/NativeHelper':header})
 write('missingframework', {k:v for k,v in base.items() if k!='Payload/Test.app/Frameworks/Lib.framework/Info.plist'})
 for name,path in [('traversal','../outside'),('absolute','/tmp/outside'),('backslash','Payload\\bad'),('collision','payload/test.app/test')]: write(name,base|{path:b'bad'})
 write('missing', {k:v for k,v in base.items() if k!='Payload/Test.app/Test'})
