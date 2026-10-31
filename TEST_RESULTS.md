@@ -72,3 +72,7 @@ Unsigned IPA SHA-256 reported by the successful runner:
 The CLI artifact-download route returned HTTP 403 at its blob redirect in this execution environment. The GitHub connector successfully returned the artifact as a downloadable file reference. No local rehash or local inspection of that hosted IPA is claimed. The SHA above is the runner's recorded output; Windows users should independently compare their downloaded copy per docs/WINDOWS_BOOTSTRAP.md.
 
 Remaining unverified: iOS 27.0.1 and physical-device behavior, Files/iCloud provider interaction, HTTPS downloads in iOS, hardware file-protection enforcement, real certificate/private-key eligibility, CMS profile trust, real entitlements/signatures, account/provisioning backend, pairing compatibility, authorized device transport, signing/install/launch/refresh/update and saved-data preservation. Signing/install/refresh remain disabled. **Classification remains V1 Experimental.**
+
+## V1 audit hardening checkpoint
+
+Source 1f6d4027518df085dbd9dbbcbe62057083872aa3 adds corrupted-index validation, missing-package refusal, bounded actual-byte copies and profile expiration-at-use/identifier checks. `scripts/test.sh` passed locally: **15 portable XCTest tests, zero failures**, plus CLI checks. Hosted validation for this new source is pending; the earlier 14-test hosted run remains evidence only for its recorded source. Signing/install/refresh and target-device acceptance remain unavailable.

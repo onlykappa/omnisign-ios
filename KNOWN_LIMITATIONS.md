@@ -9,6 +9,6 @@
 - Archive limits can exclude large Kodi builds. Symlinks are rejected even when legitimate. ZIP64/unsupported compression behavior depends on ZIPFoundation.
 - No application icon decoding; generic icons avoid trusting unvalidated images. Navigation passed a hosted Simulator UI test; full visual/accessibility testing and Liquid Glass behavior are unverified.
 - Diagnostic context is deliberately sparse and in memory; export, per-app logs and persistence are not implemented.
-- No automatic cleanup after a process crash, transactional database, deduplication, importer cancellation UI or download progress percentage. Downloads use an indeterminate progress state.
+- Corrupt metadata/missing package references fail closed and copies enforce byte caps. No automatic cleanup after a process crash, transactional database, deduplication, importer cancellation UI or download progress percentage. Downloads use an indeterminate progress state.
 - Project generation, Simulator execution and unsigned iPhone compilation/IPA packaging passed on hosted Xcode. Signed IPA generation and physical-device execution still need authorized signing assets and hardware.
 - Repository: onlykappa/omnisign-ios. Hosted build and draft-PR results are tracked in TEST_RESULTS.md. Unrelated repositories are not modified.

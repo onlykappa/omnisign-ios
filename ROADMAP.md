@@ -18,6 +18,7 @@ Target: stock iPhone 17 / iOS 27.0.1, no paid APIs, one-time Windows bootstrap p
 - [x] Add local Keychain adapter and legacy pairing schema checks; Keychain save/update passed in Simulator.
 - [x] Add conservative profile/entitlement/preflight policies and bounded recovery.
 - [x] Reject unsafe archive structures and missing recognized framework metadata.
+- [x] Validate restored library metadata/package references, cap actual copied bytes and recheck profile expiration at use; 15 portable tests passed at the audit-hardening checkpoint.
 - [x] Pass hosted Simulator tests for actual app IPA import/reload, Keychain save/update and five-section navigation.
 - [ ] Validate file-protection enforcement on hardware, Files/iCloud providers and HTTPS streaming.
 - [ ] Parse all relevant Mach-O architectures, load commands, encryption and typed entitlements.
