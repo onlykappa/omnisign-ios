@@ -42,6 +42,7 @@ enum HTTPSDownloader {
     @Published var pairing = "Not imported"
     @Published var certificate = "Not inspected"
     @Published var certificateExpiration = "Unknown"
+    @Published var profile = "No provisioning profile imported"
     @Published var identities: [LocalIdentity] = []
     @Published var identityStatus = "Not queried; no Apple account requests"
     @Published var identityProofs: [UUID: String] = [:]
@@ -63,6 +64,9 @@ enum HTTPSDownloader {
                     certificateExpiration = ISO8601DateFormatter().string(from: try CertificateMetadata(der: stored).notAfter)
                 }
             } catch { certificate = "Stored certificate unavailable or invalid; signing disabled" }
+            do {
+                if let stored = try SecureStore().read(key: "profile") { profile = Self.describeProfile(try ProfileEnvelope(cms: stored)) }
+            } catch { profile = "Stored profile invalid or unavailable; signing blocked" }
             Task { await reloadOperations() }
         } catch { library = nil; journal = nil; status = "Library or history unavailable; imports disabled; existing files preserved" }
     }
@@ -103,6 +107,10 @@ enum HTTPSDownloader {
                 if kind == "pairing" {
                     try PairingInspector.validate(data); try SecureStore().save(data, key: "pairing")
                     pairing = "Stored; connection unverified"; status = "Pairing schema inspected"
+                } else if kind == "profile" {
+                    let envelope = try ProfileEnvelope(cms: data)
+                    try SecureStore().save(data, key: "profile"); profile = Self.describeProfile(envelope)
+                    status = "Provisioning profile inspected; CMS trust unverified"
                 } else {
                     let summary = try SecureStore().inspectCertificate(data)
                     try SecureStore().save(data, key: "certificate"); certificate = summary
@@ -110,7 +118,7 @@ enum HTTPSDownloader {
                     status = "Certificate inspected"
                 }
             }
-        } catch { await fail(operation, category: kind == "pairing" ? .pairing : kind == "certificate" ? .certificate : .inspection, error: error) }
+        } catch { await fail(operation, category: kind == "pairing" ? .pairing : kind == "certificate" ? .certificate : kind == "profile" ? .provisioning : .inspection, error: error) }
     }
     func download(_ string: String) async {
         guard !busy else { return }
@@ -125,6 +133,11 @@ enum HTTPSDownloader {
             try await HTTPSDownloader.download(url, to: temporary)
             try await inspectAndPersist(temporary, operation: id)
         } catch { await fail(operation, category: .transport, error: error) }
+    }
+    private static func describeProfile(_ envelope: ProfileEnvelope) -> String {
+        let summary = envelope.summary, now = Date()
+        let state = summary.expiration <= now ? "Expired" : ((summary.creationDate ?? .distantPast) > now ? "Not yet valid" : "Time-valid metadata")
+        return "\(envelope.profileName ?? "Unnamed profile")\n\(summary.appIdentifier)\nExpires \(ISO8601DateFormatter().string(from: summary.expiration)) · \(summary.deviceCount) listed devices\n\(state); CMS signature/Apple trust unverified; signing blocked"
     }
     func inspectLocalIdentities() {
         do {
@@ -229,6 +242,8 @@ struct RootView: View {
                         Text("Discovery and a local challenge never revoke certificates, contact Apple or authorize installation.").font(.caption)
                     }
                     Section("Provisioning and transport") {
+                        Button("Import provisioning profile for inspection") { select("profile") }.disabled(model.busy)
+                        Text(model.profile)
                         Text("CMS trust validation, profile acquisition, VPN probes and authorized device-service connections remain unavailable.")
                     }
                 }.navigationTitle("Signing Center")

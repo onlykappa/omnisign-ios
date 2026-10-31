@@ -76,7 +76,7 @@ public struct CertificateMetadata: Equatable, Sendable {
         return result
     }
 }
-private struct DERNode {
+struct DERNode {
     let tag: UInt8
     let body: Int
     let end: Int
