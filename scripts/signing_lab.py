@@ -101,9 +101,10 @@ def verify_target(binary, bundle, cert, temp, openssl, swift_lab):
 
 
 def main():
-    if sys.platform != 'darwin' or len(sys.argv) != 2:
+    if sys.platform != 'darwin' or len(sys.argv) not in (2, 3) or (len(sys.argv) == 3 and sys.argv[2] != '--swift-identity'):
         raise RuntimeError('This fixture harness requires macOS/Xcode and the compiled lab executable')
     os.umask(0o077)
+    identity_origin = 'swift-on-device-capable-factory' if len(sys.argv) == 3 else 'openssl-host-fixture'
     lab = pathlib.Path(sys.argv[1]).resolve()
     openssl = 'openssl'
     brew_ssl = pathlib.Path('/opt/homebrew/opt/openssl@3/bin/openssl')
@@ -113,7 +114,16 @@ def main():
         temp = pathlib.Path(temporary)
         key, cert, identity, password = [temp / x for x in ['key.pem', 'certificate.pem', 'identity.p12', 'password']]
         password.write_text(secrets.token_hex(24))
-        run([openssl, 'req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', key, '-out', cert, '-days', '1', '-sha256', '-subj', '/CN=OmniSign Disposable Lab/OU=OMNILAB123', '-addext', 'basicConstraints=critical,CA:FALSE', '-addext', 'keyUsage=critical,digitalSignature', '-addext', 'extendedKeyUsage=codeSigning'], 'generate disposable identity')
+        if identity_origin == 'openssl-host-fixture':
+            run([openssl, 'req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', key, '-out', cert, '-days', '1', '-sha256', '-subj', '/CN=OmniSign Disposable Lab/OU=OMNILAB123', '-addext', 'basicConstraints=critical,CA:FALSE', '-addext', 'keyUsage=critical,digitalSignature', '-addext', 'extendedKeyUsage=codeSigning'], 'generate disposable identity')
+        else:
+            raw_pfx, der_cert = temp / 'memory-test-export.p12', temp / 'certificate.der'
+            run([lab, '--generate-fixture-identity', raw_pfx, der_cert], 'Swift synthetic identity generation')
+            # Synthetic material only, contained in this private temporary directory.
+            # Re-export with OpenSSL for independent DER/PFX parsing and password encryption.
+            run([openssl, 'x509', '-inform', 'DER', '-in', der_cert, '-out', cert], 'independent synthetic certificate decoding')
+            run([openssl, 'verify', '-check_ss_sig', '-CAfile', cert, cert], 'independent synthetic certificate self-signature verification')
+            run([openssl, 'pkcs12', '-in', raw_pfx, '-passin', 'pass:', '-nodes', '-nocerts', '-out', key], 'independent synthetic private-key decoding')
         run([openssl, 'pkcs12', '-export', '-inkey', key, '-in', cert, '-out', identity, '-passout', 'file:' + str(password), '-keypbe', 'AES-256-CBC', '-certpbe', 'AES-256-CBC', '-macalg', 'SHA256'], 'package disposable identity')
         sdk = run(['xcrun', '--sdk', 'iphoneos', '--show-sdk-path'], 'resolve iPhone SDK').decode().strip()
         root = temp / 'Lab.app'; framework = root / 'Frameworks/LabFramework.framework'; extension = root / 'PlugIns/LabWidget.appex'
@@ -141,7 +151,10 @@ def main():
             if needle in native_text:
                 native_category = category
                 break
-        print('Apple codesign verifier accepted synthetic output: ' + str(native_accepted).lower())
+        print('Mac codesign structural/cryptographic verification accepted synthetic output: ' + str(native_accepted).lower())
+        apple_anchor = subprocess.run(['codesign', '--verify', '--deep', '--strict', '-R=anchor apple generic', str(root)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        apple_anchor_accepted = apple_anchor.returncode == 0
+        print('Apple-anchor requirement accepted synthetic identity: ' + str(apple_anchor_accepted).lower())
         print('Native verification result category: ' + native_category)
         # Controlled generated app only: codesign never receives the P12/password/key paths.
         native_detail = native.stderr.decode(errors='replace').replace(str(temp), '<generated-fixture>')[:1200]
@@ -203,9 +216,14 @@ def main():
             print('PASS: independent verification rejects tampered resource.')
         else:
             raise RuntimeError('Tampering was not detected')
-        result = dict(independentFixtureCryptoVerified=True, independentSwiftCMSVerified=True, targetCount=4, tamperRejected=True, codeTamperRejected=True, cmsTamperRejected=True, nativeCodesignAccepted=native_accepted, nativeVerificationCategory=native_category, nativeRedactedDiagnostic=native_detail, nativeRequirementParsed=requirement_parsed, nativeRequirementEntryType=requirement_entry_type, appleDevelopmentAuthorization=False, physicalDeviceValidated=False, installed=False)
+        result = dict(identityOrigin=identity_origin, nativeAppleAnchorRequirementAccepted=apple_anchor_accepted, independentFixtureCryptoVerified=True, independentSwiftCMSVerified=True, targetCount=4, tamperRejected=True, codeTamperRejected=True, cmsTamperRejected=True, nativeCodesignAccepted=native_accepted, nativeVerificationCategory=native_category, nativeRedactedDiagnostic=native_detail, nativeRequirementParsed=requirement_parsed, nativeRequirementEntryType=requirement_entry_type, appleDevelopmentAuthorization=False, physicalDeviceValidated=False, installed=False)
         evidence = pathlib.Path('build-evidence'); evidence.mkdir(exist_ok=True)
-        (evidence / 'offline-signing-status.json').write_text(json.dumps(result, indent=2) + '\n')
+        evidence_name = 'offline-signing-swift-identity-status.json' if len(sys.argv) == 3 else 'offline-signing-status.json'
+        (evidence / evidence_name).write_text(json.dumps(result, indent=2) + '\n')
+        if not native_accepted:
+            raise RuntimeError('Native structural/cryptographic verification rejected synthetic output')
+        if apple_anchor_accepted:
+            raise RuntimeError('Unexpected Apple-anchor acceptance for a non-Apple identity')
 
 
 if __name__ == '__main__':

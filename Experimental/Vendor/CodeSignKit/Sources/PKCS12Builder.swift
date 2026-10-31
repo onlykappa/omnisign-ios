@@ -17,6 +17,9 @@ public enum PKCS12Builder {
         privateKeyDER: Data?,
         password: String? = nil
     ) throws -> Data {
+        if let password, !password.isEmpty {
+            throw CodeSignerError.certificateError("Encrypted PKCS12 export is unsupported; refusing to ignore a requested password")
+        }
         // 1. CertBag: SEQUENCE { certId (1.2.840.113549.1.9.22.1), certValue [0] EXPLICIT OCTET STRING(certDER) }
         let certBagValue = ASN1Helper.sequence(
             ASN1Helper.oidX509Certificate +

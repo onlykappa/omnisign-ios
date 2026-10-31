@@ -22,11 +22,12 @@ jobs:
           set -o pipefail
           mkdir -p build-evidence
           scripts/signing-lab.sh 2>&1 | tee build-evidence/offline-signing.log
-      - name: Compile isolated verifier module for iOS (not device execution)
+      - name: Compile isolated verifier and disposable identity modules for iOS (not execution)
         run: |
           set -o pipefail
           ios_sdk_path="$(xcrun --sdk iphoneos --show-sdk-path)"
           swift build --package-path Experimental/OfflineSignerLab --triple arm64-apple-ios17.0 --sdk "$ios_sdk_path" --scratch-path Experimental/OfflineSignerLab/.build-ios --target IndependentCMSVerifier --jobs 2 2>&1 | tee build-evidence/ios-verifier-compile.log
+          swift build --package-path Experimental/OfflineSignerLab --triple arm64-apple-ios17.0 --sdk "$ios_sdk_path" --scratch-path Experimental/OfflineSignerLab/.build-ios --target DisposableSigningSupport --jobs 2 2>&1 | tee build-evidence/ios-disposable-support-compile.log
       - name: Upload sanitized evidence only
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

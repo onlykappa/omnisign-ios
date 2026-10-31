@@ -3,6 +3,7 @@
 import Foundation
 import CodeSignKit
 import IndependentCMSVerifier
+import DisposableSigningSupport
 #if canImport(Glibc)
 import Glibc
 #else
@@ -21,6 +22,17 @@ guard CommandLine.arguments.count == 4 else {
     FileHandle.standardError.write(Data("Usage: omnisign-lab <disposable.app> <synthetic-identity.p12> <password-file>\n".utf8)); exit(2)
 }
 do {
+    if CommandLine.arguments[1] == "--generate-fixture-identity" {
+        let pfx = URL(fileURLWithPath:CommandLine.arguments[2]), certificate = URL(fileURLWithPath:CommandLine.arguments[3])
+        umask(0o077)
+        guard pfx.standardizedFileURL != certificate.standardizedFileURL, !FileManager.default.fileExists(atPath:pfx.path), !FileManager.default.fileExists(atPath:certificate.path) else { throw LabFailure.inputRejected }
+        let identity = try SyntheticIdentityFactory.generate()
+        try identity.ephemeralPKCS12.write(to:pfx,options:.atomic)
+        try FileManager.default.setAttributes([.posixPermissions:0o600],ofItemAtPath:pfx.path)
+        try identity.certificateDER.write(to:certificate,options:.atomic)
+        print("Generated a disposable non-Apple test identity locally; no key material is logged. Unencrypted PFX is test-only and must remain in the ephemeral test directory.")
+        exit(0)
+    }
     if CommandLine.arguments[1] == "--verify-cms" {
         let signature = try bounded(URL(fileURLWithPath: CommandLine.arguments[2]), limit: 2_097_152)
         let content = try bounded(URL(fileURLWithPath: CommandLine.arguments[3]), limit: 16_777_216)
