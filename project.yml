@@ -29,6 +29,22 @@ targets:
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         MARKETING_VERSION: '0.1.0'
         CURRENT_PROJECT_VERSION: '1'
+  OmniSignAppTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: AppTests
+      - path: Tests/OmniCoreTests/Fixtures/valid.ipa
+        buildPhase: resources
+    dependencies:
+      - target: OmniSign
+      - package: OmniCore
+        product: OmniCore
+    settings:
+      base:
+        SWIFT_VERSION: '5.0'
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: org.omnisign.manager.apptests
   OmniSignUITests:
     type: bundle.ui-testing
     platform: iOS
@@ -46,4 +62,4 @@ schemes:
       targets:
         OmniSign: all
     test:
-      targets: [OmniSignUITests]
+      targets: [OmniSignAppTests, OmniSignUITests]

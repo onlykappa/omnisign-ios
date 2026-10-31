@@ -13,6 +13,12 @@ struct SecureStore {
             guard SecItemAdd(item as CFDictionary, nil) == errSecSuccess else { throw OmniError.unavailable }
         } else if status != errSecSuccess { throw OmniError.unavailable }
     }
+    // Deletes only a named item in OmniSign's private generic-password service; no certificate API.
+    func removeLocalItem(key: String) throws {
+        let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: key]
+        let status = SecItemDelete(query as CFDictionary)
+        guard status == errSecSuccess || status == errSecItemNotFound else { throw OmniError.unavailable }
+    }
     func contains(_ key: String) -> Bool {
         let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: key, kSecReturnData as String: false]
         return SecItemCopyMatching(query as CFDictionary, nil) == errSecSuccess
