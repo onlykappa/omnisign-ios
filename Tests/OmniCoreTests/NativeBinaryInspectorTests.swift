@@ -6,8 +6,16 @@ final class NativeBinaryInspectorTests: XCTestCase {
         let bytes = (0..<4).map { UInt8(truncatingIfNeeded: value >> ($0 * 8)) }
         return Data(little ? bytes : bytes.reversed())
     }
+    func concatenate(_ pieces: Data...) -> Data {
+        var result = Data()
+        for piece in pieces { result.append(piece) }
+        return result
+    }
     func thin(cpu: UInt32 = 0x0100000C, subtype: UInt32 = 0, commands: [Data] = [], fileType: UInt32 = 2) -> Data {
-        var data = word(0xFEEDFACF) + word(cpu) + word(subtype) + word(fileType) + word(UInt32(commands.count)) + word(UInt32(commands.reduce(0) { $0 + $1.count })) + word(0) + word(0)
+        let commandBytes = UInt32(commands.reduce(0) { $0 + $1.count })
+        let fields: [UInt32] = [0xFEEDFACF, cpu, subtype, fileType, UInt32(commands.count), commandBytes, 0, 0]
+        var data = Data()
+        for field in fields { data.append(word(field)) }
         commands.forEach { data.append($0) }; if data.count < 128 { data.append(Data(count:128 - data.count)) }; return data
     }
     func inspect(_ data: Data) throws -> NativeBinaryInfo {
@@ -32,9 +40,9 @@ final class NativeBinaryInspectorTests: XCTestCase {
         XCTAssertThrowsError(try inspect(thin(fileType:1)))
     }
     func testEncryptionFlagAndBounds() throws {
-        let command = word(0x2C) + word(24) + word(96) + word(16) + word(1) + word(0)
+        let command = concatenate(word(0x2C), word(24), word(96), word(16), word(1), word(0))
         XCTAssertTrue(try inspect(thin(commands:[command])).encrypted)
-        let bad = word(0x2C) + word(24) + word(128) + word(100) + word(1) + word(0)
+        let bad = concatenate(word(0x2C), word(24), word(128), word(100), word(1), word(0))
         XCTAssertThrowsError(try inspect(thin(commands:[bad])))
     }
     func fat(overlap: Bool = false) -> Data {
@@ -63,11 +71,11 @@ final class NativeBinaryInspectorTests: XCTestCase {
     }
     func signedEnvelope(entitlements: [String: Any]) throws -> Data {
         let xml = try PropertyListSerialization.data(fromPropertyList:entitlements,format:.xml,options:0)
-        let cd = word(0xFADE0C02,little:false) + word(44,little:false) + Data(count:36)
-        let ent = word(0xFADE7171,little:false) + word(UInt32(xml.count + 8),little:false) + xml
+        let cd = concatenate(word(0xFADE0C02,little:false), word(44,little:false), Data(count:36))
+        let ent = concatenate(word(0xFADE7171,little:false), word(UInt32(xml.count + 8),little:false), xml)
         let total = 28 + cd.count + ent.count
-        let blob = word(0xFADE0CC0,little:false) + word(UInt32(total),little:false) + word(2,little:false) + word(0,little:false) + word(28,little:false) + word(5,little:false) + word(UInt32(28 + cd.count),little:false) + cd + ent
-        let command = word(0x1D) + word(16) + word(256) + word(UInt32(blob.count))
+        let blob = concatenate(word(0xFADE0CC0,little:false), word(UInt32(total),little:false), word(2,little:false), word(0,little:false), word(28,little:false), word(5,little:false), word(UInt32(28 + cd.count),little:false), cd, ent)
+        let command = concatenate(word(0x1D), word(16), word(256), word(UInt32(blob.count)))
         var data = thin(commands:[command]); data.append(Data(count:256 - data.count)); data.append(blob); return data
     }
     func testTypedXMLParsingDoesNotAssertCryptographicValidity() throws {
@@ -82,7 +90,7 @@ final class NativeBinaryInspectorTests: XCTestCase {
         XCTAssertThrowsError(try inspect(signedEnvelope(entitlements:["float":1.5])))
     }
     func testSignatureRangesAndBlobOverlapsFailClosed() throws {
-        let command = word(0x1D) + word(16) + word(32) + word(100)
+        let command = concatenate(word(0x1D), word(16), word(32), word(100))
         XCTAssertThrowsError(try inspect(thin(commands:[command])))
         var image = try signedEnvelope(entitlements:["enabled":true])
         image.replaceSubrange((256 + 24)..<(256 + 28),with:word(28,little:false))

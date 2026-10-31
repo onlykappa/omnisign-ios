@@ -45,6 +45,7 @@ struct LocalIdentity: Identifiable {
         guard randomStatus == errSecSuccess else { throw SecureStoreError(code: randomStatus) }
         let challenge = Data(bytes)
         var error: Unmanaged<CFError>?
+        defer { if let error { _ = error.takeRetainedValue() } }
         guard let signature = SecKeyCreateSignature(privateKey, algorithm, challenge as CFData, &error) else { throw OmniError.keyOperationDenied }
         // Discard underlying descriptions: a crypto backend can include sensitive context.
         return SecKeyVerifySignature(publicKey, algorithm, challenge as CFData, signature, nil)
