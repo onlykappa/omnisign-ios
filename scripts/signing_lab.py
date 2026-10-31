@@ -143,6 +143,25 @@ def main():
                 break
         print('Apple codesign verifier accepted synthetic output: ' + str(native_accepted).lower())
         print('Native verification result category: ' + native_category)
+        # Controlled generated app only: codesign never receives the P12/password/key paths.
+        native_detail = native.stderr.decode(errors='replace').replace(str(temp), '<generated-fixture>')[:1200]
+        if native_detail:
+            print('Native verifier diagnostic (generated fixture only): ' + native_detail.strip())
+        requirement_parsed = None
+        _, root_blobs = signature_parts(root / 'Lab')
+        requirement_set = root_blobs.get(2)
+        if requirement_set and len(requirement_set) >= 20:
+            count = struct.unpack_from('>I', requirement_set, 8)[0]
+            if count == 1:
+                slot, offset = struct.unpack_from('>II', requirement_set, 12)
+                if slot == 3 and offset + 8 <= len(requirement_set):
+                    length = struct.unpack_from('>I', requirement_set, offset + 4)[0]
+                    if offset + length <= len(requirement_set):
+                        file = temp / 'generated-requirement.bin'
+                        file.write_bytes(requirement_set[offset:offset + length])
+                        parsed = subprocess.run(['csreq','-r',str(file),'-t'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+                        requirement_parsed = parsed.returncode == 0
+                        print('Native designated-requirement parser accepted candidate blob: ' + str(requirement_parsed).lower())
         # Prove code-page and CMS corruption fail independently, not just resource changes.
         framework_binary = framework / 'LabFramework'
         original = framework_binary.read_bytes()
@@ -181,7 +200,7 @@ def main():
             print('PASS: independent verification rejects tampered resource.')
         else:
             raise RuntimeError('Tampering was not detected')
-        result = dict(independentFixtureCryptoVerified=True, independentSwiftCMSVerified=True, targetCount=4, tamperRejected=True, codeTamperRejected=True, cmsTamperRejected=True, nativeCodesignAccepted=native_accepted, nativeVerificationCategory=native_category, appleDevelopmentAuthorization=False, physicalDeviceValidated=False, installed=False)
+        result = dict(independentFixtureCryptoVerified=True, independentSwiftCMSVerified=True, targetCount=4, tamperRejected=True, codeTamperRejected=True, cmsTamperRejected=True, nativeCodesignAccepted=native_accepted, nativeVerificationCategory=native_category, nativeRedactedDiagnostic=native_detail, nativeRequirementParsed=requirement_parsed, appleDevelopmentAuthorization=False, physicalDeviceValidated=False, installed=False)
         evidence = pathlib.Path('build-evidence'); evidence.mkdir(exist_ok=True)
         (evidence / 'offline-signing-status.json').write_text(json.dumps(result, indent=2) + '\n')
 
