@@ -1,5 +1,5 @@
 {
-  "updatedUTC": "2026-10-31T13:03:54.191345+00:00",
+  "updatedUTC": "2026-10-31T13:13:27.918098+00:00",
   "classification": "V2 Blocked",
   "v1Branch": "feat/v1-experimental",
   "v1PR": 1,
@@ -8,10 +8,10 @@
   "mergeAuthorized": false,
   "releaseAuthorized": false,
   "appSourceCheckpoint": "2bf03b6",
-  "labSourceCheckpoint": "4a32f5f",
+  "labSourceCheckpoint": "a342feb",
   "portableTestsPassed": 47,
   "latestHostedUniqueTestsPassed": 57,
-  "localLabTestsPassed": 14,
+  "localLabTestsPassed": 18,
   "physicalDeviceValidated": false,
   "appleSigningOperational": false,
   "installationOperational": false,
@@ -25,13 +25,17 @@
     41176350147,
     41201328417,
     41203139779,
-    41203535444
+    41203535444,
+    41204139145,
+    41204233854
   ],
   "nativeCodesignAcceptedSyntheticOutput": true,
   "nativeCodesignEvidenceRun": 41201328417,
   "appleDevelopmentAuthorization": false,
   "pendingRuns": [
-    41203656725
+    41204233846,
+    41204383402,
+    41204248419
   ],
   "criticalBlockers": [
     "Apple account/session/provisioning backend missing",
@@ -39,10 +43,20 @@
     "Validated free-only paired device transport missing",
     "Physical iPhone 17/iOS 27.0.1 zero-PC acceptance absent"
   ],
-  "nextAction": "Phone inspection preview is ready after authorized Windows bootstrap. Continue V1 production signer/validator/account/profile/transport prerequisites; do not enable mutation. Check app rerun41203656725 before treating it as newer evidence.",
+  "nextAction": "Inspect pending UI diagnostics and strict app/V1 runs; fix any actual failure, then resync stacked V2 ancestry preserving checkpoints. Physical preview available from older verified artifact; real signer/account/profile/transport workflows still missing.",
   "fixtureSourceCheckpoint": "d5632a9",
-  "hostedLabTestsPassed": 14,
-  "latestPassedLabRun": 41203535444,
+  "hostedLabTestsPassed": 18,
+  "latestPassedLabRun": 41204233854,
   "disposableFixtureBuildPassedRun": 41203656751,
-  "disposableFixtureHardwareValidated": false
+  "disposableFixtureHardwareValidated": false,
+  "ciHardeningSourceCheckpoint": "4932d31",
+  "uiTestDiagnosticSourceCheckpoint": "1713cff",
+  "v1CIHardeningSourceCheckpoint": "7ff18d3",
+  "failedAppRuns": [
+    {
+      "run": 41203656725,
+      "source": "d5632a9",
+      "failure": "Library UI navigation assertions11/12; native integration passed; root cause unresolved"
+    }
+  ]
 }

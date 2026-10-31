@@ -1,6 +1,6 @@
 # First physical-device test: inspection preview
 
-Status: **ready for owner execution after authorized Windows bootstrap; NOT RUN**. This test covers the real inspection app, not independent signing/install/refresh. No Mac purchase is needed. The app must never replace Kodi/KappaForge, revoke certificates or infer installation from an import.
+Status: **available for owner preview after authorized Windows bootstrap; NOT RUN**. A newer Simulator rerun41203656725 failed Library navigation assertions; root cause is unresolved and diagnostic run41204383402 is pending. The exact artifact below comes from the earlier passed57-test run; report any tab-navigation failure during preview. This test covers the real inspection app, not independent signing/install/refresh. No Mac purchase is needed. The app must never replace Kodi/KappaForge, revoke certificates or infer installation from an import.
 
 ## Obtain the tested build
 

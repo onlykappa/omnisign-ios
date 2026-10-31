@@ -31,3 +31,8 @@ Owner policy: keep PR #1 and PR #2 draft and unmerged. PR #2 is stacked on `feat
 - [ ] Obtain owner approval before any merge/release; do not infer approval from completion.
 
 No simulated or command-exit-only success can satisfy a device/signature gate. Completion checkboxes must link evidence or identify the test. Future work and actual implementation must be distinguished in every report. See ../WORK_STATE.md for resume instructions.
+
+- [x] Add independent bounded Swift code-page/special-slot/CMS verification;18 lab tests and dual-origin Mac/iOS-compile checks passed (a342feb/run41204139145, strict rerun41204233854). This is not full resource/trust/device verification.
+- [x] Make required app/lab CI stages fail on each error/pipeline; YAML/bash checked, V1 local15 tests passed, hosted lab strict rerun passed.
+- [ ] Resolve Library UI failure41203656725; inspect explicit-selection/hierarchy follow-up41204383402 and strict app/V1 runs41204233846/41204248419.
+- [ ] Preserve checkpoint and resync V2 ancestry onto updated V1 after pending diagnostics; leave both drafts unmerged.

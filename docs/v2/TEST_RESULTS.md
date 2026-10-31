@@ -20,7 +20,7 @@ That run also passed both synthetic identity origins, all4 signed target types p
 
 [Hosted41203656751](https://github.com/onlykappa/omnisign-ios/actions/runs/41203656751), sourced5632a9: built **two unsigned disposable SwiftUI acceptance apps**, versions1.0/build1 and1.1/build2. Workflow checked exact same bundle identifier, expected versions/builds and arm64 Mach-O; artifacts include runner hashes/build logs. Saved-value UI is real but **no physical launch/refresh/update/data-survival test ran**. Fixture has no nested framework/extension. See ../../Tests/DeviceFixture/README.md. These are builds, not additional automated device test passes.
 
-App rerun41203656725 on d5632a9 is pending; app source is unchanged from passed2bf03b6, but no result is inferred for the newer run. Relevant portable suite rerun locally:47 passed plus CLI checks. Both PRs remain draft/unmerged; no deployment or release.
+**App rerun41203656725 FAILED** on d5632a9: native integration tests passed, Library title/import-control UI assertions11/12 failed. Root cause unresolved; app source unchanged from passed2bf03b6. Source1713cff adds explicit selected-tab postcondition, bounded synthetic failure hierarchy/screenshot and15s destination waits.47 core/CLI checks and UI syntax parse passed locally; hosted41204383402 pending behind41204233846. No claim that the failure is fixed. Relevant portable suite rerun locally:47 passed plus CLI checks. Both PRs remain draft/unmerged; no deployment or release.
 
 ## Historical checkpoints (superseded where noted)
 
@@ -51,3 +51,11 @@ Separate AGPL laboratory, not an app dependency: https://github.com/onlykappa/om
 **Apple's `codesign --verify --deep --strict` rejected the output (`nativeCodesignAccepted=false`).** No Apple development trust, target-device execution, provisioning, real signing identity, installation or zero-PC acceptance has been demonstrated. A green primitive experiment does not close the signing gate; its JSON records Apple authorization/installation/physical validation as false. No lab keys/P12/password/certificate/binary are uploaded; only sanitized build/verification evidence. Root app dependency graph is unchanged.
 
 V1 backport also passed hosted run https://github.com/onlykappa/omnisign-ios/actions/runs/41174314865 on source 1f6d402: 18 unique automated tests (15 portable + 2 app + 1 UI). This fixes V1's index/copy/expiration regressions without merging PR #1.
+
+## Independent Swift code verifier and CI reliability
+
+Sourcea342feb:18 local and hosted lab tests passed in [run41204139145](https://github.com/onlykappa/omnisign-ios/actions/runs/41204139145). Independent target imports Crypto + its own CMS verifier, not CodeSignKit. Supports bounded <=16MiB thin arm64 LE64, SHA256 CodeDirectory0x20400; checks load-command/signature bounds, disjoint packed signature blobs, complete page coverage, special-slot data bindings and CMS mathematics. Rejects missing bindings, modified code/CMS/seals, truncation, overlap and appended unhashed tail. Result explicitly leaves resource-file contents, Apple trust and installation false; no complete loadability/entitlement/profile check.
+
+Mac harness cross-checked both identity origins/four real targets with Swift code+CMS, Python page/special-slot/listed-resource checks and OpenSSL CMS, and required Swift itself to reject code/CMS tampering. All passed, native codesign true, explicit Apple-anchor false. Verifier/support/signer iOS modules compiled; no phone execution.
+
+Source4932d31 makes every required app/lab shell step strict (`set -euo pipefail`), including packaging and both iOS compilation commands, closing a potential masked-error path. YAML/bash validation passed. Lab strict rerun41204233854 succeeded. App strict rerun41204233846 and newer UI diagnostic41204383402 pending. V1 equivalent7ff18d3 passed15 local/coreCLI + YAML/bash checks; hosted41204248419 pending. Earlier positive checkpoints remain historical evidence, never substitutes for failed/pending runs.

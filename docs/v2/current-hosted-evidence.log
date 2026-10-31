@@ -27,3 +27,17 @@ experiment	Disposable cryptographic signing experiment	2026-10-31T13:01:38.96083
 Disposable fixture sourced5632a9 / hosted41203656751 / conclusion success
 Two unsigned arm64 builds1.0/1.1; exact same bundleID and expected version/build metadata assertions executed.
 No physical fixture launch, signing, refresh, update or data survival result.
+
+Independent code verifier sourcea342feb / hosted41204139145 / conclusion success; strict lab4932d31/run41204233854 success.
+experiment	Disposable cryptographic signing experiment	2026-10-31T13:09:12.6062160Z 	 Executed 18 tests, with 0 failures (0 unexpected) in 6.392 (6.394) seconds
+experiment	Disposable cryptographic signing experiment	2026-10-31T13:09:12.6066630Z 	 Executed 18 tests, with 0 failures (0 unexpected) in 6.392 (6.396) seconds
+experiment	Disposable cryptographic signing experiment	2026-10-31T13:09:16.1185880Z Apple-anchor requirement accepted synthetic identity: false
+experiment	Disposable cryptographic signing experiment	2026-10-31T13:09:16.1191200Z PASS: Python and independent Swift verification each reject code-page tampering.
+experiment	Disposable cryptographic signing experiment	2026-10-31T13:09:16.1192440Z PASS: OpenSSL/Python and independent Swift verification each reject CMS tampering.
+experiment	Disposable cryptographic signing experiment	2026-10-31T13:09:17.4343660Z Apple-anchor requirement accepted synthetic identity: false
+experiment	Disposable cryptographic signing experiment	2026-10-31T13:09:17.4347970Z PASS: Python and independent Swift verification each reject code-page tampering.
+experiment	Disposable cryptographic signing experiment	2026-10-31T13:09:17.4349200Z PASS: OpenSSL/Python and independent Swift verification each reject CMS tampering.
+
+App sourced5632a9 / run41203656725 FAILED.
+build	Run Simulator app smoke test	2026-10-31T13:07:45.1851320Z /Users/runner/work/omnisign-ios/omnisign-ios/UITests/NavigationTests.swift:11: error: -[OmniSignUITests.NavigationTests testExperimentalAppLaunchAndNavigation] : XCTAssertTrue failed
+build	Run Simulator app smoke test	2026-10-31T13:07:45.2583160Z /Users/runner/work/omnisign-ios/omnisign-ios/UITests/NavigationTests.swift:12: error: -[OmniSignUITests.NavigationTests testExperimentalAppLaunchAndNavigation] : XCTAssertTrue failed

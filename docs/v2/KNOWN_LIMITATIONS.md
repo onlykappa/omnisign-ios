@@ -16,3 +16,6 @@
 - General native Mac codesign acceptance of synthetic output does not imply an Apple development identity or profile. Swift-generated disposable identities, dual-origin/Apple-anchor rejection and iOS-support checks passed hosted run41203535444. No hardcoded test private key or lab dependency is shipped in the manager.
 
 - The disposable SwiftUI version pair compiles but has never launched on the target. Its saved-value screen cannot prove signing/install provenance and does not cover nested framework/extension behavior; lab fixtures are separate cryptographic tests. Free-provisioning app/identifier limits can prevent simultaneous manager/fixture testing alongside owner apps. Do not delete owner apps to make room automatically.
+
+- App run41203656725 failed the Library navigation UI assertions while native integration passed. Root cause remains unresolved;1713cff adds actual tab-selection checking and failure diagnostics, hosted41204383402 pending. Prior57-test run is historical, not proof the newer failure disappeared.
+- Independent Swift code-page/special-slot/CMS verifier passes18 lab tests/real generated targets on Mac and compiles iOS, but only supports bounded thin arm64 SHA256 CD0x20400. Resource-file content coverage, entitlement/profile/trust/loadability and physical execution remain unverified.
