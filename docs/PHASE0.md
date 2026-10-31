@@ -44,3 +44,7 @@ LocalDevVPN uses a custom StosVPN license with attribution and redistribution/br
 ## Gate-opening requirements
 
 Resolve licenses and all dependency revisions; audit local authentication/anisette without external credential collection; implement private-key ownership/trust and exact profiles; parse/reconcile actual typed entitlements; verify native architecture/encryption and all signatures; validate authorized transport/pairing on target OS; complete disposable-app sign/install/launch/refresh/update/data retention without computer. Then, and only then, evaluate a production release. See DEVICE_ACCEPTANCE.md. No iOS background-execution guarantee is established.
+
+## Subsequent build evidence
+
+The local Linux constraints above describe the initial gate inspection. An owner-provisioned GitHub repository and hosted macOS build subsequently became available. Xcode compilation, Simulator integration/UI tests and unsigned iPhone IPA packaging passed in run 41171713736; see TEST_RESULTS.md. This opens the build/toolchain milestone only. Account/signing/device transport and physical iPhone 17/iOS 27.0.1 acceptance gates remain closed.

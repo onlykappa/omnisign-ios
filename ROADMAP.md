@@ -10,15 +10,16 @@ Target: stock iPhone 17 / iOS 27.0.1, no paid APIs, one-time Windows bootstrap p
 - [x] Implement real IPA import/inspection, bounded archive checks and persisted library.
 - [x] Pass 11 portable XCTest cases and CLI accept/reject checks locally.
 - [x] Add standard hosted macOS workflow for tests, Simulator compilation, unsigned iPhone compilation, IPA packaging and evidence upload.
-- [ ] Verify hosted macOS workflow passes; record its run URL, Xcode/SDK and artifact hash.
-- [ ] Open draft PR and keep main unchanged.
+- [x] Verify [hosted macOS workflow](https://github.com/onlykappa/omnisign-ios/actions/runs/41171713736) passes; Xcode 16.4, iPhoneOS SDK 18.5, iPhone 17 Pro Max Simulator / iOS 26.2. Artifact hash is recorded in TEST_RESULTS.md.
+- [x] Open [draft PR #1](https://github.com/onlykappa/omnisign-ios/pull/1) and keep main unchanged.
 
 ## 2. Inspection and local security
 
-- [x] Add local Keychain adapter and legacy pairing schema checks; iOS integration remains untested.
+- [x] Add local Keychain adapter and legacy pairing schema checks; Keychain save/update passed in Simulator.
 - [x] Add conservative profile/entitlement/preflight policies and bounded recovery.
 - [x] Reject unsafe archive structures and missing recognized framework metadata.
-- [ ] Validate iOS Keychain, file protection, Files/iCloud import and HTTPS streaming in Simulator/device tests.
+- [x] Pass hosted Simulator tests for actual app IPA import/reload, Keychain save/update and five-section navigation.
+- [ ] Validate file-protection enforcement on hardware, Files/iCloud providers and HTTPS streaming.
 - [ ] Parse all relevant Mach-O architectures, load commands, encryption and typed entitlements.
 - [ ] Inspect developer certificate validity, Apple authorization and matching private-key ownership.
 - [ ] Validate CMS profile trust, device coverage, per-target identifiers, capabilities and expiration.

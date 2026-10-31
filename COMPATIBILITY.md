@@ -3,7 +3,8 @@
 | Target | Evidence | Status |
 |---|---|---|
 | Linux x86_64 Swift core | See TEST_RESULTS.md | Automated tests only |
-| SwiftUI iOS application | Source and XcodeGen specification | Xcode build not run |
+| SwiftUI iOS application | Hosted Xcode 16.4 / SDK 18.5 Simulator and unsigned arm64 iPhone builds | Passed |
+| iPhone 17 Pro Max Simulator / iOS 26.2 | Two app-integration tests and one navigation UI test | Passed; distinct from physical target |
 | iPhone 17 / iOS 27.0.1 | No connected hardware or target SDK | Unverified |
 | Stock iOS signing/install/refresh | Source research only | Disabled |
 | Kodi custom IPA | No owner IPA supplied or changed | Archive support conditional on limits; signing unknown |
