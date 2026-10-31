@@ -24,7 +24,7 @@ import OmniCore
         } catch { library = nil; status = "Library unavailable; imports disabled" }
     }
     func record(_ category: DiagnosticCategory, error: Error? = nil) {
-        diagnostics.append(Diagnostic(category: category, reason: error as? OmniError)); status = "Operation stopped; see Diagnostics"
+        diagnostics.append(Diagnostic(category: category, code: (error as? SecureStoreError).map { Int($0.code) }, reason: error as? OmniError)); status = "Operation stopped; see Diagnostics"
     }
     func importFile(_ url: URL, kind: String) async {
         guard !busy else { return }; busy = true; status = "Inspecting…"

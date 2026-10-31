@@ -42,7 +42,7 @@ jobs:
           set -o pipefail
           python3 scripts/select-simulator.py > build-evidence/simulator-id.txt
           simulator_id="$(cat build-evidence/simulator-id.txt)"
-          xcodebuild -project OmniSign.xcodeproj -scheme OmniSign -destination "platform=iOS Simulator,id=$simulator_id" -derivedDataPath DerivedData/Simulator -resultBundlePath build-evidence/SimulatorTests.xcresult CODE_SIGNING_ALLOWED=NO test 2>&1 | tee build-evidence/simulator-tests.log
+          xcodebuild -project OmniSign.xcodeproj -scheme OmniSign -destination "platform=iOS Simulator,id=$simulator_id" -derivedDataPath DerivedData/Simulator -resultBundlePath build-evidence/SimulatorTests.xcresult CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- test 2>&1 | tee build-evidence/simulator-tests.log
       - name: Compile unsigned iPhone application
         run: |
           set -o pipefail
