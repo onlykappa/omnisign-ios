@@ -10,3 +10,7 @@ OmniSign.xcodeproj/
 !Tests/OmniCoreTests/Fixtures/*.ipa
 
 __pycache__/
+
+*.key
+*.pem
+build-evidence/

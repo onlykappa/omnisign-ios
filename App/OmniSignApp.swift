@@ -53,6 +53,9 @@ enum HTTPSDownloader {
             items = try library!.load()
             journal = try OperationJournal(directory: directory)
             if SecureStore().contains("pairing") { pairing = "Stored; connection unverified" }
+            do {
+                if let stored = try SecureStore().read(key: "certificate") { certificate = try SecureStore().inspectCertificate(stored) }
+            } catch { certificate = "Stored certificate unavailable or invalid; signing disabled" }
             Task { await reloadOperations() }
         } catch { library = nil; journal = nil; status = "Library or history unavailable; imports disabled; existing files preserved" }
     }
@@ -187,7 +190,7 @@ struct RootView: View {
                     Section("Local inspection") {
                         Button("Import DER certificate") { select("certificate") }.disabled(model.busy)
                         Text(model.certificate)
-                        Text("Certificate expiration and development eligibility require a complete certificate backend.")
+                        Text("Imported DER validity dates and subject OU are metadata only. Apple development eligibility and private-key ownership remain unverified.")
                         Button("Import legacy pairing plist") { select("pairing") }.disabled(model.busy)
                         Text(model.pairing)
                         Text("Pairing secrets are stored in this device’s Keychain. Import does not verify connection compatibility. Remote pairing formats are unsupported.")

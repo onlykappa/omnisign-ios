@@ -3,11 +3,24 @@ on:
   workflow_dispatch:
   push:
     branches: [feat/v1-experimental, feat/v2-foundations]
+    paths:
+      - 'App/**'
+      - 'AppTests/**'
+      - 'Sources/**'
+      - 'Tests/**'
+      - 'UITests/**'
+      - 'Package.swift'
+      - 'Package.resolved'
+      - 'project.yml'
+      - 'scripts/test.sh'
+      - 'scripts/fixtures.py'
+      - 'scripts/select-simulator.py'
+      - '.github/workflows/ios-build.yml'
 permissions:
   contents: read
 concurrency:
   group: ios-build-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false # Preserve evidence from active tests; queue only the latest source checkpoint.
 jobs:
   build:
     runs-on: macos-15
