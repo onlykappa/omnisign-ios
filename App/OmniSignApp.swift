@@ -266,6 +266,20 @@ struct InspectionView: View {
                 Text(item.importedAt, style: .date)
                 Text("\(item.entries) archive entries · \(item.expandedBytes) expanded bytes")
             }
+            Section("Unverified native-image metadata") {
+                ForEach(item.nativeImages, id: \.path) { image in
+                    VStack(alignment: .leading) {
+                        Text(image.path).font(.caption.monospaced())
+                        Text(image.info.slices.map(\.architecture).joined(separator: ", ")).font(.caption)
+                        Text(image.info.encrypted ? "Encrypted code detected; signing blocked" : "No encrypted range declared; not proof of compatibility").font(.caption)
+                        Text(image.info.signatureEnvelopePresent ? "Signature envelope present; validity unverified" : "No signature envelope in all slices").font(.caption)
+                        ForEach(Array(image.info.slices.enumerated()), id: \.offset) { _, slice in
+                            if let entitlements = slice.xmlEntitlements { Text("Untrusted XML entitlement keys: " + entitlements.keys.sorted().joined(separator: ", ")).font(.caption) }
+                            if slice.derEntitlementsPresent { Text("DER entitlements present; semantics unverified").font(.caption) }
+                        }
+                    }
+                }
+            }
             Section("Signing targets · children first") { ForEach(item.signingOrder, id: \.self) { Text($0).font(.caption.monospaced()) } }
             Section("Findings") { ForEach(item.warnings, id: \.self) { Text($0) } }
             Section("Device operations") {

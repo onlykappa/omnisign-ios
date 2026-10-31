@@ -9,6 +9,8 @@ final class CoreTests: XCTestCase {
         XCTAssertEqual(result.main.version, "1.2")
         XCTAssertEqual(result.bundles.count, 3)
         XCTAssertEqual(result.nativeLibraries.count, 1)
+        XCTAssertEqual(result.nativeImages.count, 4)
+        XCTAssertTrue(result.nativeImages.allSatisfy { $0.info.slices.first?.architecture == "arm64" })
         XCTAssertEqual(result.signingOrder.last, result.main.path)
         XCTAssertFalse(result.warnings.isEmpty)
     }
