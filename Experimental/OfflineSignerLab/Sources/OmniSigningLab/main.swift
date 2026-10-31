@@ -2,6 +2,7 @@
 // Offline disposable-fixture experiment. Not linked into OmniSign's application.
 import Foundation
 import CodeSignKit
+import IndependentCMSVerifier
 #if canImport(Glibc)
 import Glibc
 #else
@@ -20,6 +21,14 @@ guard CommandLine.arguments.count == 4 else {
     FileHandle.standardError.write(Data("Usage: omnisign-lab <disposable.app> <synthetic-identity.p12> <password-file>\n".utf8)); exit(2)
 }
 do {
+    if CommandLine.arguments[1] == "--verify-cms" {
+        let signature = try bounded(URL(fileURLWithPath: CommandLine.arguments[2]), limit: 2_097_152)
+        let content = try bounded(URL(fileURLWithPath: CommandLine.arguments[3]), limit: 16_777_216)
+        let proof = try IndependentCMSVerifier.verify(signature: signature, detachedContent: content)
+        guard proof.signatureMathematicallyVerified, !proof.appleTrustVerified, !proof.canAuthorizeInstallation else { throw LabFailure.inputRejected }
+        print("Independent Swift CMS mathematics verified; Apple trust, certificate time and installation authorization are not verified.")
+        exit(0)
+    }
     let root = URL(fileURLWithPath: CommandLine.arguments[1]).standardizedFileURL
     guard root.pathExtension == "app", root == root.resolvingSymlinksInPath(),
           let info = try PropertyListSerialization.propertyList(from: bounded(root.appendingPathComponent("Info.plist"), limit: 1_048_576), format: nil) as? [String: Any],

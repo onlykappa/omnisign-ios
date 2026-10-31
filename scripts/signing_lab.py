@@ -55,7 +55,7 @@ def signature_parts(binary):
     return data, blobs
 
 
-def verify_target(binary, bundle, cert, temp, openssl):
+def verify_target(binary, bundle, cert, temp, openssl, swift_lab):
     data, blobs = signature_parts(binary)
     cd = blobs[0]
     if struct.unpack_from('>I', cd)[0] != 0xFADE0C02:
@@ -97,6 +97,7 @@ def verify_target(binary, bundle, cert, temp, openssl):
     # Explicitly trust ONLY the generated fixture leaf for this mathematical CMS test.
     # This is not Apple chain/development authorization.
     run([openssl, 'cms', '-verify', '-binary', '-inform', 'DER', '-in', cms, '-content', directory, '-CAfile', cert, '-purpose', 'any', '-out', os.devnull], 'independent OpenSSL CMS verification')
+    run([swift_lab, '--verify-cms', cms, directory], 'independent Swift CMS mathematics')
 
 
 def main():
@@ -130,20 +131,57 @@ def main():
         sentinel = root / 'sentinel.txt'; sentinel.write_text('disposable resource\n')
         run([lab, root, identity, password], 'experimental CodeSignKit signing')
         for binary, bundle in targets:
-            verify_target(binary, bundle, cert, temp, openssl)
+            verify_target(binary, bundle, cert, temp, openssl, lab)
         print('PASS: four generated targets have independently verified code-page/special-slot hashes and CMS signatures against the synthetic fixture identity.')
         native = subprocess.run(['codesign', '--verify', '--deep', '--strict', str(root)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         native_accepted = native.returncode == 0
+        native_text = native.stderr.decode(errors='replace').lower()
+        native_category = 'accepted' if native_accepted else 'unclassified-native-rejection'
+        for needle, category in [('not trusted','certificate-trust'),('cssmerr_tp_not_trusted','certificate-trust'),('requirements','requirements'),('requirement','requirements'),('resource','resource-envelope'),('invalid signature','signature'),('not signed','unsigned')]:
+            if needle in native_text:
+                native_category = category
+                break
         print('Apple codesign verifier accepted synthetic output: ' + str(native_accepted).lower())
+        print('Native verification result category: ' + native_category)
+        # Prove code-page and CMS corruption fail independently, not just resource changes.
+        framework_binary = framework / 'LabFramework'
+        original = framework_binary.read_bytes()
+        _, framework_blobs = signature_parts(framework_binary)
+        cd = framework_blobs[0]
+        code_limit = struct.unpack_from('>I', cd, 32)[0]
+        corrupted = bytearray(original)
+        corrupted[min(4096, code_limit - 1)] ^= 1
+        framework_binary.write_bytes(corrupted)
+        try:
+            verify_target(framework_binary, framework, cert, temp, openssl, lab)
+        except RuntimeError:
+            print('PASS: independent verification rejects code-page tampering.')
+        else:
+            raise RuntimeError('Code-page tampering was not detected')
+        finally:
+            framework_binary.write_bytes(original)
+        corrupted = bytearray(original)
+        wrapped_cms = framework_blobs[0x10000]
+        cms_end = original.index(wrapped_cms) + len(wrapped_cms) - 1
+        corrupted[cms_end] ^= 1
+        framework_binary.write_bytes(corrupted)
+        try:
+            verify_target(framework_binary, framework, cert, temp, openssl, lab)
+        except RuntimeError:
+            print('PASS: independent verification rejects CMS tampering.')
+        else:
+            raise RuntimeError('CMS tampering was not detected')
+        finally:
+            framework_binary.write_bytes(original)
         print('Synthetic identity is not Apple-authorized. No account, provisioning, iPhone installation or on-device execution has been demonstrated.')
         sentinel.write_text('tampered resource\n')
         try:
-            verify_target(root / 'Lab', root, cert, temp, openssl)
+            verify_target(root / 'Lab', root, cert, temp, openssl, lab)
         except RuntimeError:
             print('PASS: independent verification rejects tampered resource.')
         else:
             raise RuntimeError('Tampering was not detected')
-        result = dict(independentFixtureCryptoVerified=True, targetCount=4, tamperRejected=True, nativeCodesignAccepted=native_accepted, appleDevelopmentAuthorization=False, physicalDeviceValidated=False, installed=False)
+        result = dict(independentFixtureCryptoVerified=True, independentSwiftCMSVerified=True, targetCount=4, tamperRejected=True, codeTamperRejected=True, cmsTamperRejected=True, nativeCodesignAccepted=native_accepted, nativeVerificationCategory=native_category, appleDevelopmentAuthorization=False, physicalDeviceValidated=False, installed=False)
         evidence = pathlib.Path('build-evidence'); evidence.mkdir(exist_ok=True)
         (evidence / 'offline-signing-status.json').write_text(json.dumps(result, indent=2) + '\n')
 
