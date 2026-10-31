@@ -1,5 +1,14 @@
 """Synthetic disposable ZIP fixtures; no owner applications or credentials."""
 import plistlib, zipfile, pathlib, struct
+class DeterministicZip(zipfile.ZipFile):
+    def writestr(self, entry, data, **kwargs):
+        if isinstance(entry, str):
+            entry = zipfile.ZipInfo(entry, date_time=(2026, 1, 1, 0, 0, 0))
+            entry.compress_type = self.compression
+            entry.create_system = 3
+            entry.external_attr = 0o100600 << 16
+        return super().writestr(entry, data, **kwargs)
+
 root = pathlib.Path(__file__).resolve().parents[1] / 'Tests/OmniCoreTests/Fixtures'
 root.mkdir(parents=True, exist_ok=True)
 def info(identifier, exe):
@@ -10,7 +19,7 @@ base = {'Payload/Test.app/Info.plist':info('org.omnisign.disposable','Test'), 'P
 'Payload/Test.app/PlugIns/Widget.appex/Info.plist':info('org.omnisign.disposable.widget','Widget'), 'Payload/Test.app/PlugIns/Widget.appex/Widget':header,
 'Payload/Test.app/Frameworks/libtest.dylib':header}
 def write(name, entries):
-    with zipfile.ZipFile(root / (name+'.ipa'),'w', compression=zipfile.ZIP_DEFLATED) as z:
+    with DeterministicZip(root / (name+'.ipa'),'w', compression=zipfile.ZIP_DEFLATED) as z:
         for k,v in entries.items(): z.writestr(k,v)
 write('valid',base)
 write('missingframework', {k:v for k,v in base.items() if k!='Payload/Test.app/Frameworks/Lib.framework/Info.plist'})
@@ -18,11 +27,11 @@ for name,path in [('traversal','../outside'),('absolute','/tmp/outside'),('backs
 write('missing', {k:v for k,v in base.items() if k!='Payload/Test.app/Test'})
 write('badmagic',base|{'Payload/Test.app/Test':bytes(64)})
 write('multiple',base|{'Payload/Other.app/Info.plist':info('org.other','Other')})
-with zipfile.ZipFile(root/'symlink.ipa','w') as z:
+with DeterministicZip(root/'symlink.ipa','w') as z:
     for k,v in base.items(): z.writestr(k,v)
     e=zipfile.ZipInfo('Payload/Test.app/link');e.create_system=3;e.external_attr=(0o120777 << 16);z.writestr(e,'../../outside')
 # Stored member whose bytes are changed without updating central-directory CRC.
-with zipfile.ZipFile(root/'corrupt.ipa','w') as z:
+with DeterministicZip(root/'corrupt.ipa','w') as z:
     for k,v in base.items():z.writestr(k,v)
 p=root/'corrupt.ipa'; b=bytearray(p.read_bytes()); i=b.index(header);b[i+10]^=1;p.write_bytes(b)
 

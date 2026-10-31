@@ -8,3 +8,5 @@ DerivedData/
 *.xcuserstate
 OmniSign.xcodeproj/
 !Tests/OmniCoreTests/Fixtures/*.ipa
+
+__pycache__/

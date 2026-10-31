@@ -29,8 +29,21 @@ targets:
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         MARKETING_VERSION: '0.1.0'
         CURRENT_PROJECT_VERSION: '1'
+  OmniSignUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [UITests]
+    dependencies:
+      - target: OmniSign
+    settings:
+      base:
+        SWIFT_VERSION: '5.0'
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: org.omnisign.manager.uitests
 schemes:
   OmniSign:
     build:
       targets:
         OmniSign: all
+    test:
+      targets: [OmniSignUITests]
