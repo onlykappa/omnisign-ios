@@ -16,3 +16,5 @@ Required implementation order:
 6. Demonstrate independently on the actual target using a disposable app; no SideStore application or active desktop service may be assumed.
 
 No automated certificate creation/revocation or undisclosed third-party auth service exists. An isolated signing experiment may use generated synthetic identities; that would not establish Apple development authorization or iPhone installability.
+
+Progress: certificate date/OU/development-marker metadata, untrusted CMS profile inspection and typed untrusted XML binary entitlements are implemented. Subject OU/OIDs, profile time eligibility and a matching-key challenge are not Apple authorization. The main engine is still unavailable. The independent offline lab signed four disposable targets and passed independent mathematical checks, but Apple's verifier rejected the candidate output; see TEST_RESULTS.md. CodeSignKit is isolated with its AGPL license and dependency lock, never copied into or linked with the app. Full production transitive/security audit remains incomplete.

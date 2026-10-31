@@ -1,0 +1,34 @@
+{
+  "updatedUTC": "2026-10-31T06:00:00Z",
+  "classification": "V2 Blocked",
+  "v1Branch": "feat/v1-experimental",
+  "v1PR": 1,
+  "v2Branch": "feat/v2-foundations",
+  "v2PR": 2,
+  "mergeAuthorized": false,
+  "releaseAuthorized": false,
+  "sourceCheckpoint": "0ab2990",
+  "portableTestsPassed": 42,
+  "physicalDeviceValidated": false,
+  "appleSigningOperational": false,
+  "installationOperational": false,
+  "refreshOperational": false,
+  "v1PassedRun": 41174314865,
+  "v2LastPassedInspectionRun": 41173560308,
+  "offlinePrimitivePassedRuns": [
+    41173298634,
+    41174346608
+  ],
+  "nativeAppleVerifierAcceptedSyntheticOutput": false,
+  "pendingRuns": [
+    41174709903,
+    41175000886
+  ],
+  "criticalBlockers": [
+    "Apple account/session/provisioning backend missing",
+    "Apple-authorized signer and full independent trust validation missing",
+    "Validated free-only paired device transport missing",
+    "Physical iPhone 17/iOS 27.0.1 zero-PC acceptance absent"
+  ],
+  "nextAction": "Inspect pending hosted runs and fix actual failures before advancing automation; keep both drafts unmerged."
+}

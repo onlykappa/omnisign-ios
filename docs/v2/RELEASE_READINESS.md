@@ -5,8 +5,8 @@
 | Gate | Result |
 |---|---|
 | V1 source/history/Phase 0 audit | Complete with explicit unresolved critical blockers |
-| Safe foundation regressions and passive policies | Implemented; 27 portable tests passed at checkpoint |
-| Hosted Xcode/Simulator validation of new changes | Pending; see TEST_RESULTS.md |
+| Safe foundation regressions and passive policies | Implemented; 42 portable tests passed at latest local checkpoint |
+| Hosted Xcode/Simulator validation | Prior 34-test certificate/history checkpoint passed; newer identity/native/profile validation pending |
 | Real Apple signing/provisioning and independent signatures | Missing/blocked |
 | Paired service install/refresh/update verification | Missing/blocked |
 | Physical iPhone 17/iOS 27.0.1, zero-PC and saved-data tests | Not run |

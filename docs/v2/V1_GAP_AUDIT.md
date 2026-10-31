@@ -44,3 +44,9 @@ Each row lists source, reproduction, fix and required evidence. Status changes b
 | G14 High | All release/automation surfaces | Preserve explicit gates, no auto revoke/uninstall/account change; keep PRs draft/unmerged | Baseline obeys policy; regression must preserve it |
 
 Phase 1 gate: critical gaps G01–G04 are explicitly unresolved blockers. This permits inspection/security foundation fixes, not higher-level signing/install automation. V1 is Experimental, not completed. V2 remains blocked by V1 prerequisites; no fundamental impossibility is claimed.
+
+## Verification addendum
+
+G05/G06/G07 are fixed in V1 source 1f6d402 and the stacked V2 branch: 15 portable tests and 18 total hosted V1 tests passed in run 41174314865. V2 journal, update policy and provenance changes G09–G11 have pure regression tests; inspection history/export passed in hosted run 41173560308, while mutation automation is absent. G08 now has bounded structural/architecture/encryption and XML entitlement inspection with portable regression tests, but still lacks full cryptographic/resource/DER semantics and target compatibility. G12 has bounded DER date/OU inspection and valid synthetic certificate tests; existing-key proof is implemented but its newer hosted run is pending. No profile CMS authenticity or real paired-device test has passed.
+
+The isolated CodeSignKit experiment verifies synthetic primitives but Apple's verifier rejected its output. It does not fix G01. G01–G04 remain unresolved critical blockers. Source after 0ab2990 has 42 passing portable tests; newer hosted validation is explicitly pending in TEST_RESULTS.md. No mocked Apple success or actual device success exists.

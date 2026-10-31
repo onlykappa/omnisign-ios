@@ -9,7 +9,13 @@ Owner policy: keep PR #1 and PR #2 draft and unmerged. PR #2 is stacked on `feat
 - [x] Preserve HTTP provenance and safe numeric error context.
 - [x] Implement inspection-only persistent operation records with restart/interruption reporting; no signing/install execution.
 - [x] Add conservative Compatible/Caution/Blocked update policy; keep actual update actions disabled.
-- [ ] Run portable regression tests and hosted iOS integration/UI builds; save evidence.
+- [x] Pass hosted inspection-history/certificate checkpoint (34 tests, run 41173560308) and V1 foundation backport (18 tests, run 41174314865).
+- [x] Implement bounded DER certificate metadata and CMS profile inspection with no trust grant; 42 portable tests pass with current structural regressions.
+- [x] Implement bounded thin/fat/load-command/encryption/XML-entitlement inspection and additional native inventory; cryptographic/DER/device validity remains unverified.
+- [x] Implement explicit read-only local identity discovery/key challenge source; no app signing activation.
+- [ ] Verify the newer identity/native-binary/profile source on hosted iOS; inspect runs 41174709903 and 41175000886, record failures accurately.
+- [x] Run separate pinned AGPL synthetic signing experiment: primitive checks pass; Apple's verifier rejects output. Gate remains closed.
+- [ ] Complete production signer/transitive audit and full independent signature trust validation; do not weaken verifier to make a test pass.
 - [ ] Resolve all V1 signer/transport license and implementation prerequisites in PR #1 or reviewed follow-up commits.
 - [ ] Demonstrate V1 sign/install/launch/refresh/update/data survival on the actual target, with computer disconnected.
 - [ ] Only after that gate: implement V2 certificate intelligence, authenticated account/session lifecycle, exact profile/entitlement reconciliation and independent signature verification.
