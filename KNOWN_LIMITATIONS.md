@@ -11,4 +11,4 @@
 - Diagnostic context is deliberately sparse and in memory; export, per-app logs and persistence are not implemented.
 - No automatic cleanup after a process crash, transactional database, deduplication, importer cancellation UI or download progress percentage. Downloads use an indeterminate progress state.
 - Build project generation, iOS compilation, simulator/device execution and installable signed IPA generation need macOS/Xcode and authorized signing assets. None ran here.
-- No provisioned remote OmniSign repository, so no draft PR was opened. Unrelated repositories were not changed.
+- Repository: onlykappa/omnisign-ios. Hosted build and draft-PR results are tracked in TEST_RESULTS.md. Unrelated repositories are not modified.

@@ -1,6 +1,6 @@
 # Next actions
 
-1. Provision an owner-controlled OmniSign remote repository; push `feat/v1-experimental` and open a draft PR. Do not push into Kodi, KappaForge or an unrelated public OmniSign project. No merge or release is authorized.
+1. Use the owner-provisioned onlykappa/omnisign-ios repository; push `feat/v1-experimental`, verify the hosted macOS build and open a draft PR. Do not push into Kodi, KappaForge or an unrelated public OmniSign project. No merge or release is authorized.
 2. On macOS, install compatible Xcode and XcodeGen. Run README build commands, type-check the SwiftUI/Security/URLSession integration, correct any build failures and execute simulator/UI/Keychain tests. Preserve the exact toolchain and signing settings in test evidence.
 3. Resolve SideSign licensing with its rights holders or select another fully audited licensed backend. Audit and pin GSACryptoKit, anisette generation, CodeSignKit and all transport transitives. Verify the proposed free-only transport entitlement/distribution path; do not assume an embedded packet-tunnel extension can be free-provisioned.
 4. Implement comprehensive Mach-O architecture/encryption/load-command inspection and typed entitlements extraction. Add CMS trust and resource-seal verification before enabling any signing path. Add real certificate validity/private-key challenge verification, exact per-target profile selection and read-only certificate reuse. Exclude revoke/delete/wipe APIs and upstream secret-bearing logs.
