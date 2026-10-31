@@ -34,6 +34,10 @@ targets:
     platform: iOS
     sources:
       - path: AppTests
+        excludes: [Generated]
+      - path: AppTests/Generated
+        optional: true
+        buildPhase: resources
       - path: Tests/OmniCoreTests/Fixtures/valid.ipa
         buildPhase: resources
       - path: Tests/OmniCoreTests/Fixtures/synthetic-certificate.der

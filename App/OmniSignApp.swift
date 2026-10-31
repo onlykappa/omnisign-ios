@@ -41,6 +41,10 @@ enum HTTPSDownloader {
     @Published var status = "Ready to inspect"
     @Published var pairing = "Not imported"
     @Published var certificate = "Not inspected"
+    @Published var certificateExpiration = "Unknown"
+    @Published var identities: [LocalIdentity] = []
+    @Published var identityStatus = "Not queried; no Apple account requests"
+    @Published var identityProofs: [UUID: String] = [:]
     private(set) var library: Library?
     private(set) var journal: OperationJournal?
     init() {
@@ -54,7 +58,10 @@ enum HTTPSDownloader {
             journal = try OperationJournal(directory: directory)
             if SecureStore().contains("pairing") { pairing = "Stored; connection unverified" }
             do {
-                if let stored = try SecureStore().read(key: "certificate") { certificate = try SecureStore().inspectCertificate(stored) }
+                if let stored = try SecureStore().read(key: "certificate") {
+                    certificate = try SecureStore().inspectCertificate(stored)
+                    certificateExpiration = ISO8601DateFormatter().string(from: try CertificateMetadata(der: stored).notAfter)
+                }
             } catch { certificate = "Stored certificate unavailable or invalid; signing disabled" }
             Task { await reloadOperations() }
         } catch { library = nil; journal = nil; status = "Library or history unavailable; imports disabled; existing files preserved" }
@@ -98,7 +105,9 @@ enum HTTPSDownloader {
                     pairing = "Stored; connection unverified"; status = "Pairing schema inspected"
                 } else {
                     let summary = try SecureStore().inspectCertificate(data)
-                    try SecureStore().save(data, key: "certificate"); certificate = summary; status = "Certificate inspected"
+                    try SecureStore().save(data, key: "certificate"); certificate = summary
+                    certificateExpiration = ISO8601DateFormatter().string(from: try CertificateMetadata(der: data).notAfter)
+                    status = "Certificate inspected"
                 }
             }
         } catch { await fail(operation, category: kind == "pairing" ? .pairing : kind == "certificate" ? .certificate : .inspection, error: error) }
@@ -116,6 +125,17 @@ enum HTTPSDownloader {
             try await HTTPSDownloader.download(url, to: temporary)
             try await inspectAndPersist(temporary, operation: id)
         } catch { await fail(operation, category: .transport, error: error) }
+    }
+    func inspectLocalIdentities() {
+        do {
+            identities = try IdentityInspector.discover(); identityProofs = [:]
+            identityStatus = identities.isEmpty ? "No identities accessible in OmniSign’s Keychain. A certificate alone cannot sign; no certificate requests were sent." : "Local identities discovered; Apple development eligibility and reuse remain unverified."
+        } catch { identities = []; record(.certificate, error: error); identityStatus = "Identity lookup blocked; no automatic retry or certificate creation" }
+    }
+    func proveIdentity(_ identity: LocalIdentity) {
+        do {
+            identityProofs[identity.id] = try IdentityInspector.proveOwnership(identity) ? "Matching private key proved locally; Apple eligibility and app signing remain unverified" : "Private key does not match this certificate; reuse blocked"
+        } catch { identityProofs[identity.id] = "Reuse blocked: " + ((error as? OmniError)?.rawValue ?? "private-key access unavailable; see numeric diagnostics"); record(.certificate, error: error) }
     }
     func prepareDiagnosticExport() async {
         do {
@@ -153,7 +173,7 @@ struct RootView: View {
                         LabeledContent("Device", value: UIDevice.current.model)
                         LabeledContent("OS", value: UIDevice.current.systemVersion)
                         LabeledContent("Signing", value: "Unavailable")
-                        LabeledContent("Certificate expiry", value: "Unknown")
+                        LabeledContent("Certificate expiry", value: model.certificateExpiration)
                         LabeledContent("Pairing", value: model.pairing)
                         LabeledContent("VPN / transport", value: "Not probed")
                         LabeledContent("Installed apps", value: "Unknown")
@@ -194,6 +214,19 @@ struct RootView: View {
                         Button("Import legacy pairing plist") { select("pairing") }.disabled(model.busy)
                         Text(model.pairing)
                         Text("Pairing secrets are stored in this device’s Keychain. Import does not verify connection compatibility. Remote pairing formats are unsupported.")
+                    }
+                    Section("Existing local identities · read-only") {
+                        Button("Inspect accessible Keychain identities") { model.inspectLocalIdentities() }.disabled(model.busy)
+                        Text(model.identityStatus)
+                        ForEach(model.identities) { identity in
+                            VStack(alignment: .leading) {
+                                Text("Subject OU (unverified): " + identity.metadata.subjectOrganizationalUnits.joined(separator: ", "))
+                                Text("Certificate: " + identity.metadata.validity().rawValue).font(.caption)
+                                Button("Prove matching private-key access") { model.proveIdentity(identity) }
+                                Text(model.identityProofs[identity.id] ?? "Not checked; iOS may request authorization for explicit private-key use").font(.caption)
+                            }
+                        }
+                        Text("Discovery and a local challenge never revoke certificates, contact Apple or authorize installation.").font(.caption)
                     }
                     Section("Provisioning and transport") {
                         Text("CMS trust validation, profile acquisition, VPN probes and authorized device-service connections remain unavailable.")

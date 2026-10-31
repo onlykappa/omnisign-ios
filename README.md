@@ -17,6 +17,7 @@ swift run omnisign-inspect /path/to/authorized.ipa
 On a Mac, install free Xcode and the open-source XcodeGen tool, then:
 
 ```sh
+python3 scripts/generate-test-identity.py # disposable local XCTest resources; never owner credentials
 xcodegen generate
 xcodebuild -resolvePackageDependencies -project OmniSign.xcodeproj -scheme OmniSign
 xcodebuild -project OmniSign.xcodeproj -scheme OmniSign -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
@@ -44,3 +45,5 @@ See [Windows bootstrap](docs/WINDOWS_BOOTSTRAP.md) for download, hash checking a
 An unsigned artifact still requires owner-authorized initial signing on Windows or another supported method before it can be installed. Simulator compilation is not evidence of iOS 27.0.1 compatibility or independent signing/install/refresh. Check the actual workflow result before assuming an artifact exists.
 
 Latest verified build: [https://github.com/onlykappa/omnisign-ios/actions/runs/41171713736](https://github.com/onlykappa/omnisign-ios/actions/runs/41171713736). The unsigned IPA is available in its artifacts. All 14 automated tests passed across the portable and hosted iOS suites. Independent signing, installation and refresh remain disabled.
+
+V2 work is queued in [draft PR #2](https://github.com/onlykappa/omnisign-ios/pull/2), stacked on unmerged V1. See [persistent handoff](docs/WORK_STATE.md) and [V2 roadmap](docs/v2/ROADMAP.md). New inspection/certificate/reliability foundations are not authorization to sign or install. The separate AGPL offline laboratory verifies synthetic cryptographic primitives only; Apple codesign acceptance failed for its generated identity and no physical-device workflow is claimed.
