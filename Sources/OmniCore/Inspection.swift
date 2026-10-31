@@ -37,7 +37,7 @@ public struct Inspection: Codable, Identifiable, Sendable {
         self.entries = entries; self.expandedBytes = expandedBytes; self.warnings = warnings
     }
     public func validate() throws {
-        guard let root = bundles.first, !bundles.isEmpty, bundles.count <= 1024,
+        guard let root = bundles.first, !bundles.isEmpty, bundles.count <= 1024, importedAt >= Date(timeIntervalSince1970: 0), importedAt <= Date.distantFuture,
               root.path.hasPrefix("Payload/"), root.path.hasSuffix(".app"), root.path.split(separator: "/").count == 2,
               entries > 0, entries <= 30_000, expandedBytes >= 0, expandedBytes <= 2_147_483_648,
               warnings.count <= 100, warnings.allSatisfy({ $0.utf8.count <= 4096 }), nativeLibraries.count <= 10_000,

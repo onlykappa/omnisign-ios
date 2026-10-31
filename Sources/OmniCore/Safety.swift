@@ -18,11 +18,23 @@ public struct Diagnostic: Codable, Identifiable, Sendable {
     public let operation: UUID
     public let message: String
     public let reason: OmniError?
+    private static let safeMessage = "Operation stopped. Review the category, numeric code and feasibility gate."
+    private enum CodingKeys: String, CodingKey { case id, date, category, code, httpStatus, operation, message, reason }
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id); date = try c.decode(Date.self, forKey: .date)
+        category = try c.decode(DiagnosticCategory.self, forKey: .category)
+        code = try c.decodeIfPresent(Int.self, forKey: .code); httpStatus = try c.decodeIfPresent(Int.self, forKey: .httpStatus)
+        operation = try c.decode(UUID.self, forKey: .operation); reason = try c.decodeIfPresent(OmniError.self, forKey: .reason)
+        guard try c.decode(String.self, forKey: .message) == Self.safeMessage,
+              date >= Date(timeIntervalSince1970: 0), date <= Date.distantFuture else { throw OmniError.corruptedState }
+        message = Self.safeMessage
+    }
     public init(category: DiagnosticCategory, code: Int? = nil, httpStatus: Int? = nil, operation: UUID = UUID(), reason: OmniError? = nil) {
         id = UUID(); date = Date(); self.category = .classify(code: code, httpStatus: httpStatus, stage: category)
         self.code = code; self.httpStatus = httpStatus; self.operation = operation; self.reason = reason
         // Never accept free-form backend text: it can contain pairing material, tokens or identifiers.
-        message = "Operation stopped. Review the category, numeric code and feasibility gate."
+        message = Self.safeMessage
     }
 }
 public struct RecoveryBudget {
