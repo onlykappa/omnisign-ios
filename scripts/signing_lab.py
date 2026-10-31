@@ -113,7 +113,7 @@ def main():
         temp = pathlib.Path(temporary)
         key, cert, identity, password = [temp / x for x in ['key.pem', 'certificate.pem', 'identity.p12', 'password']]
         password.write_text(secrets.token_hex(24))
-        run([openssl, 'req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', key, '-out', cert, '-days', '1', '-sha256', '-subj', '/CN=OmniSign Disposable Lab/OU=OMNILAB123'], 'generate disposable identity')
+        run([openssl, 'req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', key, '-out', cert, '-days', '1', '-sha256', '-subj', '/CN=OmniSign Disposable Lab/OU=OMNILAB123', '-addext', 'basicConstraints=critical,CA:FALSE', '-addext', 'keyUsage=critical,digitalSignature', '-addext', 'extendedKeyUsage=codeSigning'], 'generate disposable identity')
         run([openssl, 'pkcs12', '-export', '-inkey', key, '-in', cert, '-out', identity, '-passout', 'file:' + str(password), '-keypbe', 'AES-256-CBC', '-certpbe', 'AES-256-CBC', '-macalg', 'SHA256'], 'package disposable identity')
         sdk = run(['xcrun', '--sdk', 'iphoneos', '--show-sdk-path'], 'resolve iPhone SDK').decode().strip()
         root = temp / 'Lab.app'; framework = root / 'Frameworks/LabFramework.framework'; extension = root / 'PlugIns/LabWidget.appex'
@@ -137,7 +137,7 @@ def main():
         native_accepted = native.returncode == 0
         native_text = native.stderr.decode(errors='replace').lower()
         native_category = 'accepted' if native_accepted else 'unclassified-native-rejection'
-        for needle, category in [('not trusted','certificate-trust'),('cssmerr_tp_not_trusted','certificate-trust'),('requirements','requirements'),('requirement','requirements'),('resource','resource-envelope'),('invalid signature','signature'),('not signed','unsigned')]:
+        for needle, category in [('key usage','certificate-key-usage'),('not trusted','certificate-trust'),('cssmerr_tp_not_trusted','certificate-trust'),('requirements','requirements'),('requirement','requirements'),('resource','resource-envelope'),('invalid signature','signature'),('not signed','unsigned')]:
             if needle in native_text:
                 native_category = category
                 break
@@ -148,13 +148,16 @@ def main():
         if native_detail:
             print('Native verifier diagnostic (generated fixture only): ' + native_detail.strip())
         requirement_parsed = None
+        requirement_entry_type = None
         _, root_blobs = signature_parts(root / 'Lab')
         requirement_set = root_blobs.get(2)
         if requirement_set and len(requirement_set) >= 20:
             count = struct.unpack_from('>I', requirement_set, 8)[0]
             if count == 1:
                 slot, offset = struct.unpack_from('>II', requirement_set, 12)
-                if slot == 3 and offset + 8 <= len(requirement_set):
+                requirement_entry_type = slot
+                print('Candidate requirement entry type: ' + str(slot) + ' (designated requirement must be 3)')
+                if offset + 8 <= len(requirement_set):
                     length = struct.unpack_from('>I', requirement_set, offset + 4)[0]
                     if offset + length <= len(requirement_set):
                         file = temp / 'generated-requirement.bin'
@@ -200,7 +203,7 @@ def main():
             print('PASS: independent verification rejects tampered resource.')
         else:
             raise RuntimeError('Tampering was not detected')
-        result = dict(independentFixtureCryptoVerified=True, independentSwiftCMSVerified=True, targetCount=4, tamperRejected=True, codeTamperRejected=True, cmsTamperRejected=True, nativeCodesignAccepted=native_accepted, nativeVerificationCategory=native_category, nativeRedactedDiagnostic=native_detail, nativeRequirementParsed=requirement_parsed, appleDevelopmentAuthorization=False, physicalDeviceValidated=False, installed=False)
+        result = dict(independentFixtureCryptoVerified=True, independentSwiftCMSVerified=True, targetCount=4, tamperRejected=True, codeTamperRejected=True, cmsTamperRejected=True, nativeCodesignAccepted=native_accepted, nativeVerificationCategory=native_category, nativeRedactedDiagnostic=native_detail, nativeRequirementParsed=requirement_parsed, nativeRequirementEntryType=requirement_entry_type, appleDevelopmentAuthorization=False, physicalDeviceValidated=False, installed=False)
         evidence = pathlib.Path('build-evidence'); evidence.mkdir(exist_ok=True)
         (evidence / 'offline-signing-status.json').write_text(json.dumps(result, indent=2) + '\n')
 

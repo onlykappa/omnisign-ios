@@ -1,14 +1,6 @@
 {
-  "originHash" : "0ac4fec1dd6be9c66b70e33155f99916439656497481979a31e517350c7aa231",
+  "originHash" : "83c069b208aaab14fd0e1245a805e3979207e6b7d9a6dfa2c6f147575ec636d3",
   "pins" : [
-    {
-      "identity" : "codesignkit",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/mahee96/CodeSignKit.git",
-      "state" : {
-        "revision" : "d0c67710fda9a2646b9e829cb2cf443892728371"
-      }
-    },
     {
       "identity" : "swift-asn1",
       "kind" : "remoteSourceControl",

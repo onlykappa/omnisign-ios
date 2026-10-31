@@ -42,7 +42,8 @@ do {
     let passwordData = try bounded(URL(fileURLWithPath: CommandLine.arguments[3]), limit: 4096)
     guard let password = String(data: passwordData, encoding: .utf8)?.trimmingCharacters(in: .newlines), !password.isEmpty else { throw LabFailure.inputRejected }
     let parsed = try PKCS12Parser(p12Data: identity, password: password)
-    guard parsed.rsaPrivateKey != nil, parsed.leafCertificate != nil else { throw LabFailure.inputRejected }
+    guard parsed.rsaPrivateKey != nil, let leaf = parsed.leafCertificate,
+          leaf.issuerDER == leaf.subjectDER, leaf.organizationalUnit == "OMNILAB123", leaf.commonName == "OmniSign Disposable Lab" else { throw LabFailure.inputRejected }
     try CodeSigner.sign(appPath: root.path, keyData: identity, password: password, teamID: "OMNILAB123", entitlementProvider: { _ in "" }, progress: {})
     print("Experimental signing command completed; independent verification is REQUIRED. This is not Apple authorization or an installation result.")
 } catch {

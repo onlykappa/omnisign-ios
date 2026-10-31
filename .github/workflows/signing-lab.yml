@@ -5,6 +5,7 @@ on:
     branches: [feat/v2-foundations]
     paths:
       - 'Experimental/OfflineSignerLab/**'
+      - 'Experimental/Vendor/CodeSignKit/**'
       - 'scripts/signing_lab.py'
       - 'scripts/signing-lab.sh'
       - '.github/workflows/signing-lab.yml'
