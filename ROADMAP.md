@@ -51,3 +51,5 @@ Target: stock iPhone 17 / iOS 27.0.1, no paid APIs, one-time Windows bootstrap p
 - [ ] Obtain owner review before merge, deployment or release. Only then consider **V1 Functional** classification.
 
 Milestones 3–5 require missing signing/transport work and physical-device evidence; a hosted Simulator cannot close those gates. No checkbox may be marked complete based on a mock operation. See docs/NEXT_ACTIONS.md and docs/PHASE0.md for dependencies and constraints.
+
+Strict CI follow-up7ff18d3 prevents masked packaging/inspection failures. Local15 tests/CLI + shell/YAML checks passed; hosted run41204248419 pending. This changes verification reliability, not disabled signer or device-service capabilities.

@@ -76,3 +76,7 @@ Remaining unverified: iOS 27.0.1 and physical-device behavior, Files/iCloud prov
 ## V1 audit hardening checkpoint
 
 Source 1f6d4027518df085dbd9dbbcbe62057083872aa3 adds corrupted-index validation, missing-package refusal, bounded actual-byte copies and profile expiration-at-use/identifier checks. `scripts/test.sh` passed locally: **15 portable XCTest tests, zero failures**, plus CLI checks. Hosted validation for this new source is pending; the earlier 14-test hosted run remains evidence only for its recorded source. Signing/install/refresh and target-device acceptance remain unavailable.
+
+## Strict workflow checkpoint
+
+Source7ff18d3 makes required build/package/inspection shell steps stop immediately on any failed command or pipeline. Local15 portable tests and CLI checks passed; YAML/bash syntax checks passed. Hosted run41204248419 is pending. Source1f6d402 remains the passed18-test V1 app checkpoint. No new hardware or signing/install/refresh result is inferred.
