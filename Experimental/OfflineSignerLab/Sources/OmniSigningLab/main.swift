@@ -33,6 +33,20 @@ do {
         print("Generated a disposable non-Apple test identity locally; no key material is logged. Unencrypted PFX is test-only and must remain in the ephemeral test directory.")
         exit(0)
     }
+    if CommandLine.arguments[1] == "--verify-code" {
+        let binary = try bounded(URL(fileURLWithPath:CommandLine.arguments[2]),limit:16_777_216)
+        var slots: [Int:Data] = [:]
+        if CommandLine.arguments[3] != "-" {
+            let bundle = URL(fileURLWithPath:CommandLine.arguments[3])
+            slots[1] = try bounded(bundle.appendingPathComponent("Info.plist"),limit:2_097_152)
+            let seal = bundle.appendingPathComponent("_CodeSignature/CodeResources")
+            if FileManager.default.fileExists(atPath:seal.path) { slots[3] = try bounded(seal,limit:2_097_152) }
+        }
+        let result = try IndependentCodeVerifier.verify(binary:binary,externalSpecialSlots:slots)
+        guard result.codeAndCMSMathematicallyVerified, !result.resourceFilesVerified, !result.canAuthorizeInstallation else { throw LabFailure.inputRejected }
+        print("Independent Swift code-page/special-slot/CMS mathematics verified; resource-file coverage, Apple trust and installation remain unverified.")
+        exit(0)
+    }
     if CommandLine.arguments[1] == "--verify-cms" {
         let signature = try bounded(URL(fileURLWithPath: CommandLine.arguments[2]), limit: 2_097_152)
         let content = try bounded(URL(fileURLWithPath: CommandLine.arguments[3]), limit: 16_777_216)

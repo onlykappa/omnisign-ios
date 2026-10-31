@@ -6,7 +6,7 @@ import DisposableSigningSupport
 
 final class PKCS12SecurityTests: XCTestCase {
     /// All material is newly generated and destroyed locally; no owner assets or hardcoded passwords.
-    func authenticatedFixture(encrypt: Bool, digest: String = "SHA256", iterations: Int = 2048,
+    static func authenticatedFixture(encrypt: Bool, digest: String = "SHA256", iterations: Int = 2048,
                               cipher: String = "AES-256-CBC") throws -> (Data, String) {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true,
@@ -38,7 +38,7 @@ final class PKCS12SecurityTests: XCTestCase {
         return (try Data(contentsOf: output), password)
     }
     func testPasswordIntegrityIsRequiredEvenForUnencryptedBags() throws {
-        let (data, password) = try authenticatedFixture(encrypt: false)
+        let (data, password) = try Self.authenticatedFixture(encrypt: false)
         XCTAssertNotNil(try PKCS12Parser(p12Data: data, password: password).rsaPrivateKey)
         XCTAssertThrowsError(try PKCS12Parser(p12Data: data, password: UUID().uuidString))
         let root = try XCTUnwrap(ASN1Helper.parseTLV(from: data))
@@ -52,13 +52,13 @@ final class PKCS12SecurityTests: XCTestCase {
     }
     func testIndependentEncryptedPBES2AndSHA1MACAreAccepted() throws {
         for digest in ["SHA256", "SHA1"] {
-            let (data, password) = try authenticatedFixture(encrypt: true, digest: digest)
+            let (data, password) = try Self.authenticatedFixture(encrypt: true, digest: digest)
             let parsed = try PKCS12Parser(p12Data: data, password: password)
             XCTAssertEqual(parsed.leafCertificate?.subjectPublicKeyInfoDER, parsed.rsaPrivateKey?.publicKey.derRepresentation)
         }
     }
     func testExcessiveMACWorkAndOversizedOrTrailingDERAreRejected() throws {
-        let (data, password) = try authenticatedFixture(encrypt: false, iterations: 100_001)
+        let (data, password) = try Self.authenticatedFixture(encrypt: false, iterations: 100_001)
         XCTAssertThrowsError(try PKCS12Parser(p12Data: data, password: password))
         XCTAssertThrowsError(try PKCS12Parser(p12Data: Data(repeating: 0, count: 262_145)))
         XCTAssertThrowsError(try PKCS12Parser(p12Data: data + Data([0]), password: password))
@@ -99,7 +99,7 @@ final class PKCS12SecurityTests: XCTestCase {
         XCTAssertThrowsError(try PKCS12Parser(p12Data: duplicate, allowUnauthenticatedSynthetic: true))
     }
     func testPBES2AES128AndMinimalIntegrityIterationAreSupported() throws {
-        let (data, password) = try authenticatedFixture(encrypt: true, iterations: 1, cipher: "AES-128-CBC")
+        let (data, password) = try Self.authenticatedFixture(encrypt: true, iterations: 1, cipher: "AES-128-CBC")
         XCTAssertNotNil(try PKCS12Parser(p12Data: data, password: password).rsaPrivateKey)
     }
     enum FixtureError: Error { case generation }

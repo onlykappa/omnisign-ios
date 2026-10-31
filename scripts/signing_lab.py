@@ -98,6 +98,13 @@ def verify_target(binary, bundle, cert, temp, openssl, swift_lab):
     # This is not Apple chain/development authorization.
     run([openssl, 'cms', '-verify', '-binary', '-inform', 'DER', '-in', cms, '-content', directory, '-CAfile', cert, '-purpose', 'any', '-out', os.devnull], 'independent OpenSSL CMS verification')
     run([swift_lab, '--verify-cms', cms, directory], 'independent Swift CMS mathematics')
+    run([swift_lab, '--verify-code', binary, bundle if bundle else '-'], 'independent Swift code-page/special-slot/CMS mathematics')
+
+
+def require_swift_code_rejection(binary, bundle, swift_lab):
+    result = subprocess.run([str(swift_lab), '--verify-code', str(binary), str(bundle) if bundle else '-'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if result.returncode == 0:
+        raise RuntimeError('Independent Swift code verifier accepted corrupted fixture')
 
 
 def main():
@@ -190,7 +197,8 @@ def main():
         try:
             verify_target(framework_binary, framework, cert, temp, openssl, lab)
         except RuntimeError:
-            print('PASS: independent verification rejects code-page tampering.')
+            require_swift_code_rejection(framework_binary, framework, lab)
+            print('PASS: Python and independent Swift verification each reject code-page tampering.')
         else:
             raise RuntimeError('Code-page tampering was not detected')
         finally:
@@ -203,7 +211,8 @@ def main():
         try:
             verify_target(framework_binary, framework, cert, temp, openssl, lab)
         except RuntimeError:
-            print('PASS: independent verification rejects CMS tampering.')
+            require_swift_code_rejection(framework_binary, framework, lab)
+            print('PASS: OpenSSL/Python and independent Swift verification each reject CMS tampering.')
         else:
             raise RuntimeError('CMS tampering was not detected')
         finally:
@@ -216,7 +225,7 @@ def main():
             print('PASS: independent verification rejects tampered resource.')
         else:
             raise RuntimeError('Tampering was not detected')
-        result = dict(identityOrigin=identity_origin, nativeAppleAnchorRequirementAccepted=apple_anchor_accepted, independentFixtureCryptoVerified=True, independentSwiftCMSVerified=True, targetCount=4, tamperRejected=True, codeTamperRejected=True, cmsTamperRejected=True, nativeCodesignAccepted=native_accepted, nativeVerificationCategory=native_category, nativeRedactedDiagnostic=native_detail, nativeRequirementParsed=requirement_parsed, nativeRequirementEntryType=requirement_entry_type, appleDevelopmentAuthorization=False, physicalDeviceValidated=False, installed=False)
+        result = dict(identityOrigin=identity_origin, nativeAppleAnchorRequirementAccepted=apple_anchor_accepted, independentSwiftCodeMathVerified=True, independentSwiftCodeTamperRejected=True, independentSwiftCMSTamperRejected=True, swiftResourceFileContentsVerified=False, independentFixtureCryptoVerified=True, independentSwiftCMSVerified=True, targetCount=4, tamperRejected=True, codeTamperRejected=True, cmsTamperRejected=True, nativeCodesignAccepted=native_accepted, nativeVerificationCategory=native_category, nativeRedactedDiagnostic=native_detail, nativeRequirementParsed=requirement_parsed, nativeRequirementEntryType=requirement_entry_type, appleDevelopmentAuthorization=False, physicalDeviceValidated=False, installed=False)
         evidence = pathlib.Path('build-evidence'); evidence.mkdir(exist_ok=True)
         evidence_name = 'offline-signing-swift-identity-status.json' if len(sys.argv) == 3 else 'offline-signing-status.json'
         (evidence / evidence_name).write_text(json.dumps(result, indent=2) + '\n')
