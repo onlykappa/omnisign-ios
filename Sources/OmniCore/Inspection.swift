@@ -2,7 +2,7 @@ import Foundation
 import ZIPFoundation
 
 public enum OmniError: String, Error, LocalizedError, Codable {
-    case unsafeArchive, limitsExceeded, malformedBundle, unsupportedExecutable, unavailable, incompatible, invalidProfile, invalidPairing
+    case unsafeArchive, limitsExceeded, malformedBundle, unsupportedExecutable, unavailable, incompatible, invalidProfile, invalidPairing, corruptedState, invalidTransition, interrupted
     public var errorDescription: String? { rawValue }
 }
 public struct BundleRecord: Codable, Equatable, Sendable {
@@ -22,6 +22,38 @@ public struct Inspection: Codable, Identifiable, Sendable {
     public let expandedBytes: Int64
     public let warnings: [String]
     public var main: BundleRecord { bundles[0] }
+    private enum CodingKeys: String, CodingKey { case id, importedAt, bundles, nativeLibraries, entries, expandedBytes, warnings }
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id); importedAt = try c.decode(Date.self, forKey: .importedAt)
+        bundles = try c.decode([BundleRecord].self, forKey: .bundles)
+        nativeLibraries = try c.decode([String].self, forKey: .nativeLibraries)
+        entries = try c.decode(Int.self, forKey: .entries); expandedBytes = try c.decode(Int64.self, forKey: .expandedBytes)
+        warnings = try c.decode([String].self, forKey: .warnings)
+        try validate()
+    }
+    init(id: UUID, importedAt: Date, bundles: [BundleRecord], nativeLibraries: [String], entries: Int, expandedBytes: Int64, warnings: [String]) {
+        self.id = id; self.importedAt = importedAt; self.bundles = bundles; self.nativeLibraries = nativeLibraries
+        self.entries = entries; self.expandedBytes = expandedBytes; self.warnings = warnings
+    }
+    public func validate() throws {
+        guard let root = bundles.first, !bundles.isEmpty, bundles.count <= 1024,
+              root.path.hasPrefix("Payload/"), root.path.hasSuffix(".app"), root.path.split(separator: "/").count == 2,
+              entries > 0, entries <= 30_000, expandedBytes >= 0, expandedBytes <= 2_147_483_648,
+              warnings.count <= 100, warnings.allSatisfy({ $0.utf8.count <= 4096 }), nativeLibraries.count <= 10_000,
+              Set(bundles.map(\.path)).count == bundles.count else { throw OmniError.corruptedState }
+        for bundle in bundles {
+            try IPAInspector.validatePath(bundle.path)
+            guard bundle.path == root.path || bundle.path.hasPrefix(root.path + "/"), IdentifierRules.bundle(bundle.identifier),
+                  !bundle.executable.isEmpty, !bundle.executable.contains("/"), !bundle.executable.contains("\\"),
+                  bundle.executable != ".", bundle.executable != "..", bundle.executable.utf8.count <= 255,
+                  bundle.name.utf8.count <= 4096, bundle.version.utf8.count <= 128, bundle.build.utf8.count <= 128 else { throw OmniError.corruptedState }
+        }
+        for path in nativeLibraries {
+            try IPAInspector.validatePath(path)
+            guard path.hasPrefix(root.path + "/"), path.hasSuffix(".dylib") else { throw OmniError.corruptedState }
+        }
+    }
     public var signingOrder: [String] {
         Array(Set(nativeLibraries + bundles.map(\.path))).sorted {
             let a = $0.split(separator: "/").count, b = $1.split(separator: "/").count
@@ -100,7 +132,9 @@ public struct IPAInspector: Sendable {
         let libraries = allPaths.filter { $0.hasPrefix(root + "/") && $0.hasSuffix(".dylib") }.sorted()
         for library in libraries { try Self.checkMachO(records[library] ?? Data()) }
         bundles.sort { if $0.path == root { return true }; if $1.path == root { return false }; return $0.path < $1.path }
-        return Inspection(id: UUID(), importedAt: Date(), bundles: bundles, nativeLibraries: libraries, entries: count, expandedBytes: total, warnings: ["CRC verifies archive integrity, not publisher authenticity.", "Mach-O magic checked only; architecture, load commands, entitlements, encryption and code signatures remain unverified.", "Signing and installation are disabled pending audited backends and real-device acceptance."])
+        let result = Inspection(id: UUID(), importedAt: Date(), bundles: bundles, nativeLibraries: libraries, entries: count, expandedBytes: total, warnings: ["CRC verifies archive integrity, not publisher authenticity.", "Mach-O magic checked only; architecture, load commands, entitlements, encryption and code signatures remain unverified.", "Signing and installation are disabled pending audited backends and real-device acceptance."])
+        try result.validate()
+        return result
     }
     public static func checkMachO(_ data: Data) throws {
         let magics: [[UInt8]] = [[0xcf,0xfa,0xed,0xfe],[0xfe,0xed,0xfa,0xcf],[0xca,0xfe,0xba,0xbe],[0xbe,0xba,0xfe,0xca],[0xca,0xfe,0xba,0xbf],[0xbf,0xba,0xfe,0xca]]
