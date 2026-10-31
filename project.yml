@@ -36,6 +36,8 @@ targets:
       - path: AppTests
       - path: Tests/OmniCoreTests/Fixtures/valid.ipa
         buildPhase: resources
+      - path: Tests/OmniCoreTests/Fixtures/synthetic-certificate.der
+        buildPhase: resources
     dependencies:
       - target: OmniSign
       - package: OmniCore
