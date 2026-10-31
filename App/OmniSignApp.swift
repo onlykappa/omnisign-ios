@@ -37,6 +37,9 @@ enum HTTPSDownloader {
     @Published var diagnostics: [Diagnostic] = []
     @Published var operations: [WorkRecord] = []
     @Published var diagnosticExport: URL?
+    @Published var networkSnapshot = PassiveNetworkSnapshot(path:.unknown,tunnelInterfaceCount:nil)
+    private var networkObserver: PassiveNetworkObserver?
+    var runtimeContext: RuntimeDiagnosticContext { .capture() }
     @Published var busy = false
     @Published var status = "Ready to inspect"
     @Published var pairing = "Not imported"
@@ -79,6 +82,9 @@ enum HTTPSDownloader {
             } catch { profile = "Stored profile invalid or unavailable; signing blocked" }
             Task { await reloadOperations() }
         } catch { library = nil; journal = nil; status = "Library or history unavailable; imports disabled; existing files preserved" }
+        networkObserver = PassiveNetworkObserver { [weak self] snapshot in
+            Task { @MainActor [weak self] in self?.networkSnapshot = snapshot }
+        }
     }
     func record(_ category: DiagnosticCategory, error: Error? = nil) {
         diagnostics.append(Diagnostic(category: category, code: (error as? SecureStoreError).map { Int($0.code) }, httpStatus: (error as? HTTPFailure)?.status, reason: error as? OmniError))
@@ -181,7 +187,9 @@ enum HTTPSDownloader {
     func prepareDiagnosticExport() async {
         do {
             guard let journal else { throw OmniError.unavailable }
-            let data = try await journal.exportRedacted()
+            let rawHistory = try await journal.exportRedacted()
+            let records = try JSONDecoder().decode([WorkRecord].self,from:rawHistory)
+            let data = try JSONEncoder().encode(DiagnosticExportEnvelope(runtime:.capture(),network:networkSnapshot,operations:records))
             let file = FileManager.default.temporaryDirectory.appendingPathComponent("OmniSign-redacted-history.json")
             try data.write(to: file, options: [.atomic, .completeFileProtection])
             diagnosticExport = file
@@ -212,11 +220,16 @@ struct RootView: View {
                     }
                     Section("This iPhone") {
                         LabeledContent("Device", value: UIDevice.current.model)
-                        LabeledContent("OS", value: UIDevice.current.systemVersion)
+                        LabeledContent("OS", value: model.runtimeContext.osVersion)
+                        LabeledContent("Hardware model", value: model.runtimeContext.hardwareModel)
+                        LabeledContent("Runtime", value: model.runtimeContext.kind.rawValue)
+                        LabeledContent("Build SDK", value: model.runtimeContext.buildSDK)
                         LabeledContent("Signing", value: "Unavailable")
                         LabeledContent("Certificate expiry", value: model.certificateExpiration)
                         LabeledContent("Pairing", value: model.pairing)
-                        LabeledContent("VPN / transport", value: "Not probed")
+                        LabeledContent("Network path", value: model.networkSnapshot.path.rawValue)
+                        LabeledContent("VPN / transport", value: model.networkSnapshot.transportSummary)
+                        Text("Network availability or tunnel presence does not verify pairing, VPN routing or an authorized device service.").font(.caption)
                         LabeledContent("Installed apps", value: "Unknown")
                         LabeledContent("Imported apps", value: "\(model.items.count)")
                         LabeledContent("Needs inspection", value: "\(model.items.count)")
@@ -281,7 +294,7 @@ struct RootView: View {
             }.tabItem { Label("Signing", systemImage: "checkmark.seal") }
             NavigationStack {
                 List {
-                    Text("Inspection history persists locally, including interrupted operations. Exported history excludes source URLs, app identifiers and secrets. Other errors remain in memory.")
+                    Text("Inspection history persists locally, including interrupted operations. Export includes whitelisted runtime/build observations; history excludes source URLs, app identifiers and secrets. Other errors remain in memory.")
                     Button("Prepare redacted history export") { Task { await model.prepareDiagnosticExport() } }
                     if let file = model.diagnosticExport { ShareLink("Share redacted history", item: file) }
                     Section("Inspection operation history") {
