@@ -83,15 +83,8 @@ public enum EntitlementPolicy {
     }
 }
 public enum PairingInspector {
-    public static func validate(_ data: Data) throws {
-        guard data.count <= 2_097_152,
-              let p = try PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
-              let host = p["HostID"] as? String, !host.isEmpty,
-              let system = p["SystemBUID"] as? String, !system.isEmpty else { throw OmniError.invalidPairing }
-        for key in ["HostCertificate", "HostPrivateKey", "RootCertificate", "RootPrivateKey", "DeviceCertificate"] {
-            guard let bytes = p[key] as? Data, !bytes.isEmpty else { throw OmniError.invalidPairing }
-        }
-    }
+    /// Compatibility shim for callers of V1's schema validator. No live pairing is implied.
+    public static func validate(_ data: Data) throws { _ = try PairingSchemaInspector.inspect(data) }
 }
 public enum OperationKind: String, CaseIterable, Sendable { case authenticate, sign, install, update, refresh }
 public struct ExperimentalEngine: Sendable {

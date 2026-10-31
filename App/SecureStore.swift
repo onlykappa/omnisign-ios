@@ -6,7 +6,8 @@ struct SecureStoreError: Error {
     let code: OSStatus
 }
 struct SecureStore {
-    private let service = "org.omnisign.local"
+    private let service: String
+    init(service: String = "org.omnisign.local") { self.service = service }
     func save(_ data: Data, key: String) throws {
         let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: key]
         let attributes: [String: Any] = [kSecValueData as String: data, kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly]

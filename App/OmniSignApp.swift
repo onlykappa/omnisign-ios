@@ -40,6 +40,10 @@ enum HTTPSDownloader {
     @Published var busy = false
     @Published var status = "Ready to inspect"
     @Published var pairing = "Not imported"
+    @Published var pairingReplacementPending = false
+    private var pendingPairingData: Data?
+    private var pendingPairingFormat: PairingFormat?
+    private let secureStore: SecureStore
     @Published var certificate = "Not inspected"
     @Published var certificateExpiration = "Unknown"
     @Published var profile = "No provisioning profile imported"
@@ -48,24 +52,30 @@ enum HTTPSDownloader {
     @Published var identityProofs: [UUID: String] = [:]
     private(set) var library: Library?
     private(set) var journal: OperationJournal?
-    init() {
+    init(secureStore: SecureStore = SecureStore(), dataDirectory: URL? = nil) {
+        self.secureStore = secureStore
         do {
-            let directory = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true).appendingPathComponent("Library", isDirectory: true)
+            let directory = try dataDirectory ?? FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true).appendingPathComponent("Library", isDirectory: true)
             library = try Library(directory: directory)
             try FileManager.default.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: directory.path)
             var values = URLResourceValues(); values.isExcludedFromBackup = true
             var protectedURL = directory; try protectedURL.setResourceValues(values)
             items = try library!.load()
             journal = try OperationJournal(directory: directory)
-            if SecureStore().contains("pairing") { pairing = "Stored; connection unverified" }
             do {
-                if let stored = try SecureStore().read(key: "certificate") {
-                    certificate = try SecureStore().inspectCertificate(stored)
+                if let stored = try secureStore.read(key: "pairing") {
+                    let report = try PairingSchemaInspector.inspect(stored)
+                    pairing = "Stored \(report.format.rawValue) schema; connection unverified"
+                }
+            } catch { pairing = "Stored pairing unavailable, incomplete or unsupported; connection unverified" }
+            do {
+                if let stored = try secureStore.read(key: "certificate") {
+                    certificate = try secureStore.inspectCertificate(stored)
                     certificateExpiration = ISO8601DateFormatter().string(from: try CertificateMetadata(der: stored).notAfter)
                 }
             } catch { certificate = "Stored certificate unavailable or invalid; signing disabled" }
             do {
-                if let stored = try SecureStore().read(key: "profile") { profile = Self.describeProfile(try ProfileEnvelope(cms: stored)) }
+                if let stored = try secureStore.read(key: "profile") { profile = Self.describeProfile(try ProfileEnvelope(cms: stored)) }
             } catch { profile = "Stored profile invalid or unavailable; signing blocked" }
             Task { await reloadOperations() }
         } catch { library = nil; journal = nil; status = "Library or history unavailable; imports disabled; existing files preserved" }
@@ -105,15 +115,21 @@ enum HTTPSDownloader {
             } else {
                 let data = try BoundedFile.read(url, maximumBytes: 2_097_152)
                 if kind == "pairing" {
-                    try PairingInspector.validate(data); try SecureStore().save(data, key: "pairing")
-                    pairing = "Stored; connection unverified"; status = "Pairing schema inspected"
+                    let report = try PairingSchemaInspector.inspect(data)
+                    if try secureStore.read(key: "pairing") != nil {
+                        pendingPairingData = data; pendingPairingFormat = report.format
+                        pairingReplacementPending = true; status = "Pairing schema inspected; replacement awaits explicit owner approval"
+                    } else {
+                        try secureStore.save(data, key: "pairing")
+                        pairing = "Stored \(report.format.rawValue) schema; connection unverified"; status = "Pairing schema inspected; device compatibility unverified"
+                    }
                 } else if kind == "profile" {
                     let envelope = try ProfileEnvelope(cms: data)
-                    try SecureStore().save(data, key: "profile"); profile = Self.describeProfile(envelope)
+                    try secureStore.save(data, key: "profile"); profile = Self.describeProfile(envelope)
                     status = "Provisioning profile inspected; CMS trust unverified"
                 } else {
-                    let summary = try SecureStore().inspectCertificate(data)
-                    try SecureStore().save(data, key: "certificate"); certificate = summary
+                    let summary = try secureStore.inspectCertificate(data)
+                    try secureStore.save(data, key: "certificate"); certificate = summary
                     certificateExpiration = ISO8601DateFormatter().string(from: try CertificateMetadata(der: data).notAfter)
                     status = "Certificate inspected"
                 }
@@ -133,6 +149,18 @@ enum HTTPSDownloader {
             try await HTTPSDownloader.download(url, to: temporary)
             try await inspectAndPersist(temporary, operation: id)
         } catch { await fail(operation, category: .transport, error: error) }
+    }
+    func cancelPairingReplacement() {
+        pendingPairingData = nil; pendingPairingFormat = nil; pairingReplacementPending = false
+        status = "Pairing replacement cancelled; previous credentials preserved"
+    }
+    func approvePairingReplacement() {
+        defer { pendingPairingData = nil; pendingPairingFormat = nil; pairingReplacementPending = false }
+        guard let data = pendingPairingData, let format = pendingPairingFormat else { return }
+        do {
+            try secureStore.save(data, key: "pairing")
+            pairing = "Stored \(format.rawValue) schema; connection unverified"; status = "Pairing replaced with owner approval; device compatibility unverified"
+        } catch { record(.pairing, error: error) }
     }
     private static func describeProfile(_ envelope: ProfileEnvelope) -> String {
         let summary = envelope.summary, now = Date()
@@ -224,9 +252,9 @@ struct RootView: View {
                         Button("Import DER certificate") { select("certificate") }.disabled(model.busy)
                         Text(model.certificate)
                         Text("Imported DER validity dates and subject OU are metadata only. Apple development eligibility and private-key ownership remain unverified.")
-                        Button("Import legacy pairing plist") { select("pairing") }.disabled(model.busy)
+                        Button("Import pairing plist for inspection") { select("pairing") }.disabled(model.busy)
                         Text(model.pairing)
-                        Text("Pairing secrets are stored in this device’s Keychain. Import does not verify connection compatibility. Remote pairing formats are unsupported.")
+                        Text("Pairing secrets are stored in this device’s Keychain. Source-traced Lockdown and Remote Pairing plist schemas are recognized; key relationships and device compatibility remain unverified. Replacing stored credentials requires owner approval.")
                     }
                     Section("Existing local identities · read-only") {
                         Button("Inspect accessible Keychain identities") { model.inspectLocalIdentities() }.disabled(model.busy)
@@ -288,6 +316,12 @@ struct RootView: View {
         .background(Color.black)
         .fileImporter(isPresented: $importer, allowedContentTypes: [.data], allowsMultipleSelection: false) { result in
             if case .success(let urls) = result, let url = urls.first { Task { await model.importFile(url, kind: kind) } }
+        }
+        .alert("Replace stored pairing credentials?", isPresented: $model.pairingReplacementPending) {
+            Button("Replace after inspection") { model.approvePairingReplacement() }
+            Button("Keep previous credentials", role: .cancel) { model.cancelPairingReplacement() }
+        } message: {
+            Text("The selected schema was inspected; device compatibility is unverified. Replacing existing pairing credentials may prevent future connections. Review this change before proceeding.")
         }
         .alert("Download untrusted IPA", isPresented: $downloadPrompt) {
             TextField("https://…", text: $downloadURL).textInputAutocapitalization(.never).autocorrectionDisabled()
