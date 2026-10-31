@@ -1,0 +1,13 @@
+# Security
+
+Threats include hostile ZIP paths/bombs, corrupt IPA contents, impersonated download sources, leaked account/private-key/pairing material, certificate revocation, false install success and destructive application replacement.
+
+Only ZIPFoundation is linked; upstream signing/device code was examined, not copied. No Apple account password is requested. Imported legacy pairing data and DER certificate bytes are stored through Security with `WhenUnlockedThisDeviceOnly`; Keychain accessibility is not a guarantee against a compromised device. IPAs and the local metadata index use Application Support, complete file protection and backup exclusion configured by the app. Those iOS properties and Keychain paths remain untested on hardware. Source files chosen through Files are outside OmniSign's deletion control.
+
+HTTPS imports use ephemeral sessions, bounded streaming, timeouts and no redirects. URLs with embedded credentials are rejected. No URL, response body or filename is logged. The user-selected host sees the device's network request; only Apple credentials have no network path in this build. HTTPS and ZIP CRC provide no publisher authenticity. Never execute imported code during inspection.
+
+Pairing schema validation does not validate key/certificate relationships, device identity, pairing expiration or transport compatibility. No pairing values are displayed. A new pairing import replaces only OmniSign's own stored pairing item; it does not modify Apple certificates or other apps. Certificate inspection evaluates basic X.509 trust, not Apple development authorization or matching private-key ownership. Generic trust evaluation may require OS trust services; no custom certificate service exists.
+
+Diagnostics are allowlisted structural records, not regex redaction of arbitrary errors. Codes -80045/-80046/7460 retain their originating category because namespaces differ. Authentication HTTP 503/429 are recognized and never retried automatically. RecoveryBudget caps distinct nonauthentication strategies at five; it is a policy helper, not an active retry engine.
+
+No certificate revocation, automatic uninstall, container deletion or destructive replacement API is exposed. No installed-app changes are attempted, including Kodi/KappaForge. Production requires dependency/license audit, archive fuzzing, a full Mach-O/CMS/entitlement verifier, Keychain tests, device transport authentication, strict install evidence and external review. Do not submit secrets in bug reports; record only operation IDs, stage, numeric errors, OS/build versions and reproducible synthetic inputs.

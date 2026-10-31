@@ -1,0 +1,42 @@
+[
+  {
+    "project": "SideStore",
+    "revision": "cd260851ae99bf1fc946b123db24e89c8cd21dc6",
+    "remote": "https://github.com/SideStore/SideStore.git"
+  },
+  {
+    "project": "SideSign",
+    "revision": "752d1ef602aa792a432ffa1e71646dc1ecf7363c",
+    "remote": "https://github.com/SideStore/SideSign.git"
+  },
+  {
+    "project": "CodeSignKit",
+    "revision": "d0c67710fda9a2646b9e829cb2cf443892728371",
+    "remote": "https://github.com/mahee96/CodeSignKit.git"
+  },
+  {
+    "project": "minimuxer",
+    "revision": "12be70dc2627307a16bfd2dc7a009080d5bec909",
+    "remote": "https://github.com/SideStore/minimuxer.git"
+  },
+  {
+    "project": "em_proxy",
+    "revision": "6e117e140ca7cff4ff106bdefa18147552a0e592",
+    "remote": "https://github.com/SideStore/em_proxy.git"
+  },
+  {
+    "project": "LocalDevVPN",
+    "revision": "af3fd697803ada4ac2b8d518358f5ab0a534844c",
+    "remote": "https://github.com/jkcoxson/LocalDevVPN.git"
+  },
+  {
+    "project": "AltStore",
+    "revision": "56854e66fef2eac32dad88dcbad1dc131d430e60",
+    "remote": "https://github.com/altstoreio/AltStore.git"
+  },
+  {
+    "project": "StikDebug",
+    "revision": "97530a90392057783feef79709c3631b79d0eec7",
+    "remote": "https://github.com/StephenDev0/StikDebug.git"
+  }
+]

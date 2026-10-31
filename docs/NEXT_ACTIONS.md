@@ -1,0 +1,11 @@
+# Next actions
+
+1. Provision an owner-controlled OmniSign remote repository; push `feat/v1-experimental` and open a draft PR. Do not push into Kodi, KappaForge or an unrelated public OmniSign project. No merge or release is authorized.
+2. On macOS, install compatible Xcode and XcodeGen. Run README build commands, type-check the SwiftUI/Security/URLSession integration, correct any build failures and execute simulator/UI/Keychain tests. Preserve the exact toolchain and signing settings in test evidence.
+3. Resolve SideSign licensing with its rights holders or select another fully audited licensed backend. Audit and pin GSACryptoKit, anisette generation, CodeSignKit and all transport transitives. Verify the proposed free-only transport entitlement/distribution path; do not assume an embedded packet-tunnel extension can be free-provisioned.
+4. Implement comprehensive Mach-O architecture/encryption/load-command inspection and typed entitlements extraction. Add CMS trust and resource-seal verification before enabling any signing path. Add real certificate validity/private-key challenge verification, exact per-target profile selection and read-only certificate reuse. Exclude revoke/delete/wipe APIs and upstream secret-bearing logs.
+5. Integrate the audited local signing backend behind a new isolated experimental adapter, with independent cryptographic output validation and signed-package preparation. Implement actual paired device-service probes, bounded transport, installation completion and inventory/profile verification before presenting install success.
+6. Use a disposable app on the actual target for all acceptance steps in DEVICE_ACCEPTANCE.md. Confirm local sign/install/launch/refresh/update and saved-value survival with no computer connection. Keep all owner apps untouched until independent owner-authorized compatibility work.
+7. Add expiration notifications and supported opportunistic refresh scheduling only after manual refresh works. Document interruptions, loss of VPN, profile/account restrictions and bootstrap/recovery requirements.
+
+Until steps 2–6 succeed, retain Experimental classification and disabled mutation actions. No production release should be created.

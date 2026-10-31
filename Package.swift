@@ -1,0 +1,3 @@
+// swift-tools-version: 6.0
+import PackageDescription
+let package = Package(name: "OmniSign", platforms: [.iOS(.v17), .macOS(.v13)], products: [.library(name: "OmniCore", targets: ["OmniCore"]), .executable(name: "omnisign-inspect", targets: ["OmniInspect"])], dependencies: [.package(url: "https://github.com/weichsel/ZIPFoundation.git", exact: "0.9.20")], targets: [.executableTarget(name: "OmniInspect", dependencies: ["OmniCore"]), .target(name: "OmniCore", dependencies: ["ZIPFoundation"]), .testTarget(name: "OmniCoreTests", dependencies: ["OmniCore"], resources: [.copy("Fixtures")])], swiftLanguageModes: [.v5])

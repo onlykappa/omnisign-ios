@@ -1,0 +1,13 @@
+# Architecture
+
+`App/` contains the SwiftUI navigation, observable state, HTTPS streaming importer and Security-framework Keychain adapter. `Sources/OmniCore/` is a portable Swift library containing IPA inspection, library persistence and fail-closed safety policies. `project.yml` generates the iOS Xcode project. `Package.resolved` locks the only external runtime dependency, ZIPFoundation.
+
+Import pipeline: security-scoped source → private staging copy → bounded ZIP streaming/CRC inspection → metadata and native-image header inspection → UUID-named IPA → atomic JSON index. Failure removes staging and rolls back newly copied IPAs when index persistence fails. A crash between moving an IPA and indexing it can leave an orphan; automatic orphan cleanup is not implemented. The app serializes imports. The Library API is not safe for concurrent writers and must be used through a single coordinator.
+
+Archive paths are never extracted into the filesystem. Absolute, traversal, ambiguous separators, control characters, canonical case collisions and symlinks are rejected. Limits: 1 GiB input, 2 GiB declared expanded total, 512 MiB per member, 30,000 entries, 1 MiB Info.plist, 64 MiB retained prefixes. Large legitimate Kodi packages may be rejected. Mach-O checking covers magic and minimum header length only. This is not signature, architecture, loader, entitlement or encryption validation.
+
+ProfileSummary accepts an explicitly decoded plist and checks basic expiration/team/application matching. It does not decode or trust CMS. EntitlementPolicy handles exact string pairs only and rejects unreviewed wildcard transformations. InstallationPreflight is a policy check, never an install result. ExperimentalEngine always throws unavailable for authenticate/sign/install/update/refresh. No flag enables these operations.
+
+Future integration boundary: authorize account → reuse certificate AND private key → acquire a separate compatible profile for each app/extension → inspect and reconcile typed entitlements → sign nested code before parent → independently validate code directories, CMS and resources → package → pair and probe authorized device service → transfer → install → query inventory/version/profile → explicit foreground launch/data acceptance. These backends are absent. No UI state is permitted to stand in for their completion.
+
+Home reports installed inventory, VPN and expiration as unknown. Library inspection records are not installed-app records. Diagnostics accept only category, code, HTTP status and generated operation identifiers; arbitrary error descriptions are intentionally discarded. User cancellation is not logged as a success. Errors do not trigger automatic retries.
