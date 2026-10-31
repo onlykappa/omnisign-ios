@@ -4,14 +4,45 @@ import SwiftUI
 import UniformTypeIdentifiers
 import OmniCore
 
+struct HTTPFailure: Error { let status: Int }
+final class NoRedirect: NSObject, URLSessionTaskDelegate {
+    func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse, newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) { completionHandler(nil) }
+}
+enum HTTPSDownloader {
+    // A nonisolated async function performs streaming file IO away from the UI actor.
+    static func download(_ url: URL, to temporary: URL) async throws {
+        let config = URLSessionConfiguration.ephemeral
+        config.timeoutIntervalForRequest = 30; config.timeoutIntervalForResource = 180
+        let session = URLSession(configuration: config, delegate: NoRedirect(), delegateQueue: nil)
+        defer { session.invalidateAndCancel() }
+        let (bytes, response) = try await session.bytes(from: url)
+        guard let http = response as? HTTPURLResponse else { throw OmniError.unavailable }
+        guard http.statusCode == 200 else { throw HTTPFailure(status: http.statusCode) }
+        guard response.expectedContentLength <= 1_073_741_824 else { throw OmniError.limitsExceeded }
+        guard FileManager.default.createFile(atPath: temporary.path, contents: nil, attributes: [.protectionKey: FileProtectionType.complete]) else { throw OmniError.unavailable }
+        let handle = try FileHandle(forWritingTo: temporary)
+        defer { try? handle.close() }
+        var count = 0, buffer = Data()
+        for try await byte in bytes {
+            try Task.checkCancellation()
+            count += 1; guard count <= 1_073_741_824 else { throw OmniError.limitsExceeded }
+            buffer.append(byte)
+            if buffer.count >= 65_536 { try handle.write(contentsOf: buffer); buffer.removeAll(keepingCapacity: true) }
+        }
+        try handle.write(contentsOf: buffer); try handle.synchronize()
+    }
+}
 @MainActor final class AppModel: ObservableObject {
     @Published var items: [Inspection] = []
     @Published var diagnostics: [Diagnostic] = []
+    @Published var operations: [WorkRecord] = []
+    @Published var diagnosticExport: URL?
     @Published var busy = false
     @Published var status = "Ready to inspect"
     @Published var pairing = "Not imported"
     @Published var certificate = "Not inspected"
     private(set) var library: Library?
+    private(set) var journal: OperationJournal?
     init() {
         do {
             let directory = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true).appendingPathComponent("Library", isDirectory: true)
@@ -20,64 +51,78 @@ import OmniCore
             var values = URLResourceValues(); values.isExcludedFromBackup = true
             var protectedURL = directory; try protectedURL.setResourceValues(values)
             items = try library!.load()
+            journal = try OperationJournal(directory: directory)
             if SecureStore().contains("pairing") { pairing = "Stored; connection unverified" }
-        } catch { library = nil; status = "Library unavailable; imports disabled" }
+            Task { await reloadOperations() }
+        } catch { library = nil; journal = nil; status = "Library or history unavailable; imports disabled; existing files preserved" }
     }
     func record(_ category: DiagnosticCategory, error: Error? = nil) {
-        diagnostics.append(Diagnostic(category: category, code: (error as? SecureStoreError).map { Int($0.code) }, reason: error as? OmniError)); status = "Operation stopped; see Diagnostics"
+        diagnostics.append(Diagnostic(category: category, code: (error as? SecureStoreError).map { Int($0.code) }, httpStatus: (error as? HTTPFailure)?.status, reason: error as? OmniError))
+        status = "Operation stopped; see Diagnostics"
+    }
+    func reloadOperations() async { if let journal { operations = await journal.snapshot() } }
+    private func fail(_ id: UUID?, category: DiagnosticCategory, error: Error) async {
+        record(category, error: error)
+        guard let id, let journal else { return }
+        do {
+            try await journal.fail(id, category: category, code: (error as? SecureStoreError).map { Int($0.code) }, httpStatus: (error as? HTTPFailure)?.status, reason: error as? OmniError)
+        } catch { status = "Operation stopped; history could not be saved; existing IPA files preserved" }
+        await reloadOperations()
+    }
+    private func inspectAndPersist(_ source: URL, operation: UUID) async throws {
+        guard let library, let journal else { throw OmniError.unavailable }
+        try await journal.advance(operation, to: .inspecting); await reloadOperations(); status = "Inspecting…"
+        let result = try await Task.detached { try library.importIPA(source) }.value
+        try await journal.advance(operation, to: .verifying); await reloadOperations(); status = "Verifying persisted inspection…"
+        try await journal.completeInspection(operation, app: result.id, library: library)
+        items.append(result); await reloadOperations(); status = "Imported and inspected; signing unverified"
     }
     func importFile(_ url: URL, kind: String) async {
-        guard !busy else { return }; busy = true; status = "Inspecting…"
+        guard !busy else { return }; busy = true; status = "Preparing import…"
         defer { busy = false }
         let access = url.startAccessingSecurityScopedResource()
         defer { if access { url.stopAccessingSecurityScopedResource() } }
+        var operation: UUID?
         do {
             if kind == "ipa" {
-                guard let library else { throw OmniError.unavailable }
-                let result = try await Task.detached { try library.importIPA(url) }.value
-                items.append(result); status = "Imported and inspected; signing unverified"
+                guard let journal else { throw OmniError.unavailable }
+                let id = try await journal.begin(); operation = id
+                try await inspectAndPersist(url, operation: id)
             } else {
-                guard (try url.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? Int.max) <= 2_097_152 else { throw OmniError.limitsExceeded }
-                let data = try Data(contentsOf: url)
+                let data = try BoundedFile.read(url, maximumBytes: 2_097_152)
                 if kind == "pairing" {
                     try PairingInspector.validate(data); try SecureStore().save(data, key: "pairing")
                     pairing = "Stored; connection unverified"; status = "Pairing schema inspected"
                 } else {
-                    certificate = try SecureStore().inspectCertificate(data)
-                    try SecureStore().save(data, key: "certificate"); status = "Certificate inspected"
+                    let summary = try SecureStore().inspectCertificate(data)
+                    try SecureStore().save(data, key: "certificate"); certificate = summary; status = "Certificate inspected"
                 }
             }
-        } catch { record(kind == "pairing" ? .pairing : kind == "certificate" ? .certificate : .inspection, error: error) }
+        } catch { await fail(operation, category: kind == "pairing" ? .pairing : kind == "certificate" ? .certificate : .inspection, error: error) }
     }
     func download(_ string: String) async {
-        guard !busy, let url = URL(string: string), url.scheme == "https", url.user == nil, url.password == nil, url.host != nil else { record(.transport); return }
+        guard !busy else { return }
+        guard let url = URL(string: string), url.scheme == "https", url.user == nil, url.password == nil, url.host != nil else { record(.transport); return }
         busy = true; status = "Downloading untrusted source…"
         let temporary = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { busy = false; try? FileManager.default.removeItem(at: temporary) }
+        var operation: UUID?
         do {
-            // Ephemeral session avoids persistent cookies and cached authentication.
-            let config = URLSessionConfiguration.ephemeral; config.timeoutIntervalForRequest = 30; config.timeoutIntervalForResource = 180
-            let session = URLSession(configuration: config, delegate: NoRedirect(), delegateQueue: nil)
-            defer { session.invalidateAndCancel() }
-            let (bytes, response) = try await session.bytes(from: url)
-            guard let http = response as? HTTPURLResponse, http.statusCode == 200, response.expectedContentLength <= 1_073_741_824 else { throw OmniError.unavailable }
-            FileManager.default.createFile(atPath: temporary.path, contents: nil)
-            let handle = try FileHandle(forWritingTo: temporary); defer { try? handle.close() }
-            var count = 0, buffer = Data()
-            for try await byte in bytes {
-                count += 1; guard count <= 1_073_741_824 else { throw OmniError.limitsExceeded }
-                buffer.append(byte)
-                if buffer.count >= 65_536 { try handle.write(contentsOf: buffer); buffer.removeAll(keepingCapacity: true) }
-            }
-            try handle.write(contentsOf: buffer); try handle.close()
-            guard let library else { throw OmniError.unavailable }
-            let result = try await Task.detached { try library.importIPA(temporary) }.value
-            items.append(result); status = "Downloaded and inspected; source authenticity unverified"
-        } catch { record(.transport, error: error) }
+            guard let journal else { throw OmniError.unavailable }
+            let id = try await journal.begin(); operation = id; await reloadOperations()
+            try await HTTPSDownloader.download(url, to: temporary)
+            try await inspectAndPersist(temporary, operation: id)
+        } catch { await fail(operation, category: .transport, error: error) }
     }
-}
-final class NoRedirect: NSObject, URLSessionTaskDelegate {
-    func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse, newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) { completionHandler(nil) }
+    func prepareDiagnosticExport() async {
+        do {
+            guard let journal else { throw OmniError.unavailable }
+            let data = try await journal.exportRedacted()
+            let file = FileManager.default.temporaryDirectory.appendingPathComponent("OmniSign-redacted-history.json")
+            try data.write(to: file, options: [.atomic, .completeFileProtection])
+            diagnosticExport = file
+        } catch { diagnosticExport = nil; record(.unknown, error: error) }
+    }
 }
 @main struct OmniSignApp: App {
     @StateObject private var model = AppModel()
@@ -89,7 +134,7 @@ struct RootView: View {
     @State private var kind = "ipa"
     @State private var downloadURL = ""
     @State private var downloadPrompt = false
-    private func select(_ value: String) { kind = value; importer = true }
+    private func select(_ value: String) { guard !model.busy else { return }; kind = value; importer = true }
     var body: some View {
         TabView {
             NavigationStack {
@@ -97,7 +142,7 @@ struct RootView: View {
                     Section {
                         Label("OmniSign · Experimental", systemImage: "signature").font(.title2.bold())
                         Text("Signing and device services are disabled pending validation.").foregroundStyle(.secondary)
-                        Button { select("ipa") } label: { Label("Import IPA", systemImage: "plus.app.fill") }.buttonStyle(.borderedProminent)
+                        Button { select("ipa") } label: { Label("Import IPA", systemImage: "plus.app.fill") }.buttonStyle(.borderedProminent).disabled(model.busy)
                         Text(model.status)
                         if model.busy { ProgressView() }
                     }
@@ -122,8 +167,8 @@ struct RootView: View {
             }.tabItem { Label("My Apps", systemImage: "square.stack") }
             NavigationStack {
                 List {
-                    Button("Import from Files") { select("ipa") }
-                    Button("Download from HTTPS URL…") { downloadPrompt = true }
+                    Button("Import from Files") { select("ipa") }.disabled(model.busy)
+                    Button("Download from HTTPS URL…") { downloadPrompt = true }.disabled(model.busy)
                     appRows
                 }.navigationTitle("IPA Library")
             }.tabItem { Label("Library", systemImage: "archivebox") }
@@ -140,10 +185,10 @@ struct RootView: View {
                         Text("Existing certificate and accessible private key are required for reuse. Automatic revocation is prohibited.")
                     }
                     Section("Local inspection") {
-                        Button("Import DER certificate") { select("certificate") }
+                        Button("Import DER certificate") { select("certificate") }.disabled(model.busy)
                         Text(model.certificate)
                         Text("Certificate expiration and development eligibility require a complete certificate backend.")
-                        Button("Import legacy pairing plist") { select("pairing") }
+                        Button("Import legacy pairing plist") { select("pairing") }.disabled(model.busy)
                         Text(model.pairing)
                         Text("Pairing secrets are stored in this device’s Keychain. Import does not verify connection compatibility. Remote pairing formats are unsupported.")
                     }
@@ -154,7 +199,26 @@ struct RootView: View {
             }.tabItem { Label("Signing", systemImage: "checkmark.seal") }
             NavigationStack {
                 List {
-                    Text("No raw backend errors or personal identifiers are logged. Diagnostics in this build remain in memory.")
+                    Text("Inspection history persists locally, including interrupted operations. Exported history excludes source URLs, app identifiers and secrets. Other errors remain in memory.")
+                    Button("Prepare redacted history export") { Task { await model.prepareDiagnosticExport() } }
+                    if let file = model.diagnosticExport { ShareLink("Share redacted history", item: file) }
+                    Section("Inspection operation history") {
+                        ForEach(model.operations) { operation in
+                            VStack(alignment: .leading) {
+                                Text("\(operation.kind.rawValue) · \(operation.stage.rawValue)").font(.headline)
+                                TimelineView(.periodic(from: .now, by: 1)) { context in
+                                    Text("Attempt \(operation.attempt) · \(Int(operation.elapsed(at: context.date))) seconds").font(.caption)
+                                }
+                                if let previous = operation.interruptedStage { Text("Interrupted during \(previous.rawValue); automatic resume disabled").font(.caption) }
+                                if let diagnostic = operation.diagnostic {
+                                    Text(diagnostic.category.rawValue).font(.caption)
+                                    if let reason = diagnostic.reason { Text(reason.rawValue).font(.caption.monospaced()) }
+                                    if let code = diagnostic.code { Text("Code \(code)").font(.caption.monospaced()) }
+                                    if let status = diagnostic.httpStatus { Text("HTTP \(status)").font(.caption.monospaced()) }
+                                }
+                            }
+                        }
+                    }
                     ForEach(DiagnosticCategory.allCases, id: \.self) { Text($0.rawValue.capitalized) }
                     ForEach(model.diagnostics) { event in
                         VStack(alignment: .leading) { Text(event.category.rawValue); Text(event.message).font(.caption); if let reason = event.reason { Text(reason.rawValue).font(.caption.monospaced()) }; Text(event.date, style: .time) }
@@ -164,7 +228,6 @@ struct RootView: View {
         }
         .scrollContentBackground(.hidden)
         .background(Color.black)
-        .disabled(model.busy)
         .fileImporter(isPresented: $importer, allowedContentTypes: [.data], allowsMultipleSelection: false) { result in
             if case .success(let urls) = result, let url = urls.first { Task { await model.importFile(url, kind: kind) } }
         }

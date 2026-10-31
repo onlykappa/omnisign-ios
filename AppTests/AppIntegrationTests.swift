@@ -14,6 +14,12 @@ final class AppIntegrationTests: XCTestCase {
         XCTAssertEqual(model.items.last?.main.identifier, "org.omnisign.disposable")
         XCTAssertEqual(try library.load().last?.id, model.items.last?.id)
         XCTAssertEqual(model.status, "Imported and inspected; signing unverified")
+        XCTAssertEqual(model.operations.first?.result, .completed)
+        XCTAssertEqual(model.operations.first?.kind, .inspection)
+        XCTAssertEqual(model.operations.first?.app, model.items.last?.id)
+        let journal = try XCTUnwrap(model.journal)
+        let export = try await journal.exportRedacted()
+        XCTAssertFalse(String(decoding: export, as: UTF8.self).contains("org.omnisign.disposable"))
     }
     func testKeychainStoreAndUpdateOnSimulator() throws {
         let store = SecureStore()
