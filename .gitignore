@@ -18,3 +18,5 @@ build-evidence/
 AppTests/Generated/
 
 .build-*/
+
+Tests/DeviceFixture/OmniSignAcceptance.xcodeproj/
