@@ -5,10 +5,10 @@ Owner policy: keep PR #1 and PR #2 draft and unmerged. PR #2 is stacked on `feat
 - [x] Read V1 source, documentation, Phase 0, history and draft PR #1.
 - [x] Re-run existing portable suite; confirm prior hosted evidence separately.
 - [x] Audit core capabilities and explicitly record missing signer/transport/hardware blockers.
-- [ ] Fix corrupt-index validation, bounded import copy and expiration-at-use policies with regression tests.
-- [ ] Preserve HTTP provenance and safe numeric error context.
-- [ ] Implement inspection-only persistent operation records with restart/interruption reporting; no signing/install execution.
-- [ ] Add conservative Compatible/Caution/Blocked update policy; keep actual update actions disabled.
+- [x] Fix corrupt-index validation, bounded import copy and expiration-at-use policies with regression tests.
+- [x] Preserve HTTP provenance and safe numeric error context.
+- [x] Implement inspection-only persistent operation records with restart/interruption reporting; no signing/install execution.
+- [x] Add conservative Compatible/Caution/Blocked update policy; keep actual update actions disabled.
 - [ ] Run portable regression tests and hosted iOS integration/UI builds; save evidence.
 - [ ] Resolve all V1 signer/transport license and implementation prerequisites in PR #1 or reviewed follow-up commits.
 - [ ] Demonstrate V1 sign/install/launch/refresh/update/data survival on the actual target, with computer disconnected.
